@@ -1,13 +1,13 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
-  View,
+  Dimensions,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Dimensions,
+  View,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
@@ -17,24 +17,25 @@ export default function CadastroScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={['#ffe3eb', '#ffffff']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={styles.header}
-      >
-        <Text style={styles.title}>OdontoSys</Text>
 
-      </LinearGradient>
+      <LinearGradient
+              colors={['#FFF3FD', '#FFF3FD']}
+              style={styles.header}
+            >
+              <Text style={[styles.title]}>OdontoSys</Text>
+              <View style={styles.tabContainer}>
+                <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                  <Text style={styles.tab}>Login</Text>
+                </TouchableOpacity>
+                <TouchableOpacity>
+                  <Text style={[styles.tab, styles.activeTab]}>Cadastrar-se</Text>
+                </TouchableOpacity>
+              </View>
+        </LinearGradient>
+    
 
       <View style={styles.content}>
-        <View style={styles.tabContainer}>
-          <Text style={[styles.tab, styles.activeTab]}>Login</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.tab}>Cadastre-se</Text>
-          </TouchableOpacity>
-        </View>
-        
+
         <TextInput
           placeholder="Informe um email"
           value={email}
@@ -93,20 +94,21 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   tabContainer: {
+    position: 'absolute',
+    display: 'flex',
     flexDirection: 'row',
-    justifyContent: 'center',
-    
+    justifyContent: 'space-between',
+    bottom:0
+
   },
   tab: {
     fontSize: 20,
-    marginHorizontal: 10,
+    marginHorizontal: 20,
     color: '#4B0056',
-    borderBottomWidth: 0, // sem linha nos tabs não ativos
-    paddingBottom: 5, // só para dar espaço pra linha
+    opacity: 0.7,
   },
   activeTab: {
     fontWeight: 'bold',
-    textDecorationLine: 'underline',
     borderBottomWidth: 3,  // linha de 3px só no ativo
   },
   content: {

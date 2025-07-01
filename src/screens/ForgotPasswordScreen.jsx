@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { router } from 'expo-router';
 
-export default function ForgotPasswordScreen() {
+export default function ForgotPasswordScreen({ navigation }) {
   const [email, setEmail] = useState('');
 
   const handleSendCode = () => {
-    // TODO: lógica para enviar código de verificação
-    router.push('/verification-code');
+    // Substitua pela tela que você quer navegar após enviar o código
+    navigation.navigate('VerificationCode'); 
   };
 
   return (
@@ -29,7 +28,7 @@ export default function ForgotPasswordScreen() {
         <Text style={styles.buttonText}>Enviar código</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => router.back()}>
+      <TouchableOpacity onPress={() => navigation.goBack()}>
         <Text style={styles.linkText}>Voltar para o login</Text>
       </TouchableOpacity>
     </View>

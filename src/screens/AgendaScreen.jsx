@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  FlatList,
+} from 'react-native';
 
-export default function AgendaScreen() {
+export default function AgendaScreen({ navigation }) {
   const [selectedDay, setSelectedDay] = useState('Segunda');
 
   const agenda = {
@@ -51,56 +57,23 @@ export default function AgendaScreen() {
         data={agenda[selectedDay]}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
-          <View style={styles.agendaItem}>
+          <TouchableOpacity
+            style={styles.agendaItem}
+            onPress={() =>
+              navigation.navigate('DetalhesAgenda', {
+                hora: item.hora,
+                atividade: item.atividade,
+              })
+            }
+          >
             <Text style={styles.hora}>{item.hora}</Text>
             <Text style={styles.atividade}>{item.atividade}</Text>
-          </View>
+          </TouchableOpacity>
         )}
-        ListEmptyComponent={<Text style={styles.semAtividades}>Nenhuma atividade</Text>}
+        ListEmptyComponent={
+          <Text style={styles.semAtividades}>Nenhuma atividade</Text>
+        }
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-  title: { fontSize: 22, fontWeight: 'bold', color: '#4B0056', marginBottom: 20 },
-  diaSelector: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
-  diaBotao: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    backgroundColor: '#eee',
-  },
-  diaBotaoSelecionado: {
-    backgroundColor: '#4B0056',
-  },
-  diaTexto: {
-    color: '#4B0056',
-    fontWeight: '600',
-  },
-  diaTextoSelecionado: {
-    color: '#fff',
-  },
-  agendaItem: {
-    backgroundColor: '#f4eef6',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  hora: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#4B0056',
-  },
-  atividade: {
-    fontSize: 14,
-    color: '#333',
-  },
-  semAtividades: {
-    textAlign: 'center',
-    color: '#999',
-    marginTop: 30,
-    fontStyle: 'italic',
-  },
-});
