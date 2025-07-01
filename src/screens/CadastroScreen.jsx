@@ -1,13 +1,13 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
-  View,
+  Dimensions,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Dimensions,
+  View,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
@@ -29,12 +29,15 @@ export default function CadastroScreen({ navigation }) {
 
       <View style={styles.content}>
         <View style={styles.tabContainer}>
-          <Text style={[styles.tab, styles.activeTab]}>Login</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.tab}>Cadastre-se</Text>
+            <Text style={styles.tab}>Login</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity >
+            <Text style={[styles.tab, styles.activeTab]}>Cadastre-se</Text>
           </TouchableOpacity>
         </View>
-        
+
         <TextInput
           placeholder="Informe um email"
           value={email}
@@ -95,7 +98,7 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    
+
   },
   tab: {
     fontSize: 20,
@@ -106,7 +109,6 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     fontWeight: 'bold',
-    textDecorationLine: 'underline',
     borderBottomWidth: 3,  // linha de 3px só no ativo
   },
   content: {
