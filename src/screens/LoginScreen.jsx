@@ -53,11 +53,11 @@ export default function LoginScreen({ navigation }) {
           placeholderTextColor="#555"
         />
 
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
           <Text style={styles.link}>Forgot passcode?</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Agenda')}>
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
       </View>
