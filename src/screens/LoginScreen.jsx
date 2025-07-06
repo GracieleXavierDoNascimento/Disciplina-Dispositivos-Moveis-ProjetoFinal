@@ -1,15 +1,15 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
-  View,
+  Dimensions,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Dimensions,
+  View,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 
-const { width } = Dimensions.get('window');
+const { height } = Dimensions.get('window');
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -17,46 +17,49 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      {/* TOPO COM GRADIENTE E TABS */}
       <LinearGradient
-        colors={['#ffe3eb', '#ffffff']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+        colors={['#FFF3FD', '#FFF3FD']}
         style={styles.header}
       >
-        <Text style={styles.title}>OdontoSys</Text>
-
-      </LinearGradient>
-
-      <View style={styles.content}>
+        <Text style={[styles.title]}>OdontoSys</Text>
         <View style={styles.tabContainer}>
-          <Text style={[styles.tab, styles.activeTab]}>Login</Text>
+          <TouchableOpacity>
+            <Text style={[styles.tab, styles.activeTab]}>Login</Text>
+          </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate('Cadastro')}>
             <Text style={styles.tab}>Cadastrar-se</Text>
           </TouchableOpacity>
         </View>
-        
+      </LinearGradient>
+
+      {/* ÁREA DE INPUTS */}
+      <View style={styles.formArea}>
         <TextInput
-          placeholder="Email address"
+          placeholder="Email"
           value={email}
           onChangeText={setEmail}
-          style={styles.input}
+          style={[styles.input, email && styles.filledInput]}
           autoCapitalize="none"
           placeholderTextColor="#555"
         />
 
         <TextInput
-          placeholder="Password"
+          placeholder="Senha"
           value={senha}
           onChangeText={setSenha}
-          style={styles.input}
+          style={[styles.input, senha && styles.filledInput]}
           secureTextEntry
           placeholderTextColor="#555"
         />
 
-        <TouchableOpacity>
-          <Text style={styles.link}>Forgot passcode?</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+          <Text style={styles.link}>Esqueceu a senha?</Text>
         </TouchableOpacity>
+      </View>
 
+      {/* BOTÃO FIXADO NA BASE */}
+      <View style={styles.bottomArea}>
         <TouchableOpacity style={styles.button}>
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
@@ -68,63 +71,85 @@ export default function LoginScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fff',
   },
+
+  // TOPO COLORIDO
   header: {
-    paddingTop: 60,
-    paddingBottom: 30,
-    alignItems: 'center',
+    flex: 4, // 40%
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    display:'flex',
+    paddingTop: 40,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 8,
   },
   title: {
-    marginTop: 20,
-    fontSize: 70,
-    fontWeight: 'bold',
+    fontSize: 60,
+    fontWeight: 900,
     color: '#4B0056',
-    marginBottom: 15,
+    marginBottom: 20,
   },
   tabContainer: {
+    position: 'absolute',
+    display: 'flex',
     flexDirection: 'row',
-    justifyContent: 'center',
-    
+    justifyContent: 'space-between',
+    bottom:0
   },
   tab: {
     fontSize: 20,
-    marginHorizontal: 10,
+    marginHorizontal: 20,
     color: '#4B0056',
-    borderBottomWidth: 0, // sem linha nos tabs não ativos
-    paddingBottom: 5, // só para dar espaço pra linha
+    opacity: 0.7,
   },
   activeTab: {
     fontWeight: 'bold',
-    textDecorationLine: 'underline',
-    borderBottomWidth: 3,  // linha de 3px só no ativo
+    opacity: 1,
+    borderBottomWidth: 2,
+    borderBottomColor: '#4B0056',
+    paddingBottom: 4,
   },
-  content: {
-    flex: 1,
-    justifyContent: 'center', // CENTRALIZA VERTICALMENTE
+
+  // FORMULÁRIO
+  formArea: {
+    flex: 4.5, // 45%
     paddingHorizontal: 30,
-    paddingBottom: 80,
+    justifyContent: 'center',
   },
   input: {
     borderBottomWidth: 1,
     borderBottomColor: '#aaa',
     paddingVertical: 10,
-    marginBottom: 40,
-    marginTop: 40,
-    fontSize: 20,
+    marginBottom: 25,
+    fontSize: 16,
     color: '#000',
+  },
+  filledInput: {
+    fontWeight: 'bold',
   },
   link: {
     color: '#4B0056',
     textAlign: 'right',
-    marginBottom: 30,
+    fontWeight: '500',
+    marginTop: 10,
+  },
+
+  // BOTÃO
+  bottomArea: {
+    flex: 1.5, // 15%
+    justifyContent: 'center',
+    paddingHorizontal: 30,
   },
   button: {
     backgroundColor: '#4B0056',
     paddingVertical: 14,
-    borderRadius: 30,
+    borderRadius: 25,
     alignItems: 'center',
   },
   buttonText: {
