@@ -8,7 +8,7 @@ import ForgotPasswordScreen from '../src/screens/ForgotPasswordScreen';
 import AgendaScreen from '../src/screens/AgendaScreen';
 // Update the import path below to match the actual location and name of DetalhesConsultaScreen
 // Update the import path below to match the actual location and name of DetalhesConsultaScreen
-import DetalhesConsulta from '../src/screens/DetalhesConsulta';
+import DetalhesConsulta from '../src/screens/ConsultaDetalhesScreen';
 
 const Stack = createNativeStackNavigator();
 
