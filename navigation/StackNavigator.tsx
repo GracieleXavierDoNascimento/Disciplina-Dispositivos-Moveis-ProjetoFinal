@@ -6,6 +6,9 @@ import LoginScreen from '../src/screens/LoginScreen';
 import CadastroScreen from '../src/screens/CadastroScreen';
 import ForgotPasswordScreen from '../src/screens/ForgotPasswordScreen';
 import AgendaScreen from '../src/screens/AgendaScreen';
+// Update the import path below to match the actual location and name of DetalhesConsultaScreen
+// Update the import path below to match the actual location and name of DetalhesConsultaScreen
+import DetalhesConsulta from '../src/screens/DetalhesConsulta';
 
 const Stack = createNativeStackNavigator();
 
@@ -18,6 +21,7 @@ export default function AppNavigation() {
         <Stack.Screen name="Cadastro" component={CadastroScreen} />
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="Agenda" component={AgendaScreen} />
+        <Stack.Screen name="DetalhesConsulta" component={DetalhesConsulta} />
       </Stack.Navigator>
     </NavigationContainer>
   );

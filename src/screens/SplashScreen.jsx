@@ -1,25 +1,46 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  Platform,
+  useWindowDimensions,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-
-const { width, height } = Dimensions.get('window');
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SplashScreen({ navigation }) {
+  const { width, height } = useWindowDimensions();
+  const minDim = Math.min(width, height);
+
   return (
     <LinearGradient colors={['#4B0056', '#000000']} style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>OdontoSys</Text>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.innerContent}>
+          <Text style={[styles.title, { fontSize: minDim * 0.1 }]}>OdontoSys</Text>
 
-        <Image
-          source={require('../../assets/logo.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-      </View>
+          <Image
+            source={require('../../assets/logo.png')}
+            style={[styles.logo, {
+              width: width * 0.6,
+              height: width * 0.6,
+              maxHeight: height * 0.3,
+              marginTop: 20,
+              marginBottom: 20, // controla o espaço entre logo e botão
+            }]}
+            resizeMode="contain"
+          />
 
-      <TouchableOpacity style={styles.button} onPress={() => navigation.replace('Login')}>
-        <Text style={styles.buttonText}>Iniciar</Text>
-      </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, { width: width * 0.85, paddingVertical: height * 0.02 }]}
+            onPress={() => navigation.replace('Login')}
+          >
+            <Text style={[styles.buttonText, { fontSize: minDim * 0.045 }]}>Iniciar</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     </LinearGradient>
   );
 }
@@ -27,37 +48,34 @@ export default function SplashScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 40,
   },
-  content: {
+  safeArea: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1,
-    paddingBottom: 20,
+  },
+  innerContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 1,
+    paddingHorizontal: 20,
   },
   title: {
-    fontSize: 70,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 20,
+    textAlign: 'center',
   },
   logo: {
-    width: width * 0.9,
-    height: width * 0.9,
+    // definido no componente
   },
   button: {
     backgroundColor: '#fff',
-    width: width * 0.9,
-    paddingVertical: 14,
     borderRadius: 30,
-    marginBottom: 40,
+    marginTop: 10,
   },
   buttonText: {
     color: '#4B0056',
     fontWeight: 'bold',
-    fontSize: 16,
     textAlign: 'center',
   },
 });

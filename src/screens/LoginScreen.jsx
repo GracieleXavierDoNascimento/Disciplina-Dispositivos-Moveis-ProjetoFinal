@@ -60,7 +60,10 @@ export default function LoginScreen({ navigation }) {
 
       {/* BOTÃO FIXADO NA BASE */}
       <View style={styles.bottomArea}>
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate('Agenda')}
+          >
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
       </View>
