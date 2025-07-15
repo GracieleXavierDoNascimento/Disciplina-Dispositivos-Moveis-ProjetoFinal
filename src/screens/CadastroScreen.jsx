@@ -237,7 +237,7 @@ export default function CadastroScreen({ navigation }) {
               }
             }}
           >
-            <Ionicons name="arrow-back" size={24} color="#4B0056" />
+            <Ionicons name="chevron-back" size={24} color="#4B0056" opacity="0.5" />
           </TouchableOpacity>
         )}
 
