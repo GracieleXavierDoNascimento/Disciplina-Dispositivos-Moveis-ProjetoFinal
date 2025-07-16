@@ -1,74 +1,230 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import {
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View,
+  FlatList,
+  TouchableOpacity,
+} from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import CalendarStrip from 'react-native-calendar-strip';
+import moment from 'moment';
 
-export default function PerfilPacienteScreen() {
-  const dados = {
-    nome: 'Maria Eduarda',
-    dataNascimento: '12/04/2018',
-    telefone: '(11) 99999-9999',
-    responsavel: 'Ana Paula Silva',
-    alergias: 'Nenhuma',
-    observacoes: 'Não gosta de anestesia',
-  };
+// Dados de exemplo...
+const agendaData = {
+  '2025-07-15': [/* ... */],
+  '2025-07-16': [/* ... */],
+};
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Perfil do Paciente</Text>
+export default function AgendaScreen({ navigation }) {
+  const [selectedDate, setSelectedDate] = useState(
+    moment().format('YYYY-MM-DD')
+  );
 
-      <View style={styles.infoBox}>
-        <Text style={styles.label}>Nome:</Text>
-        <Text style={styles.info}>{dados.nome}</Text>
+  const renderMenu = () => (
+    <View style={styles.menu}>
+      <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+        <Feather name="home" size={24} color={'#4B0056'} />
+      </TouchableOpacity>
 
-        <Text style={styles.label}>Data de Nascimento:</Text>
-        <Text style={styles.info}>{dados.dataNascimento}</Text>
+      <TouchableOpacity onPress={() => navigation.navigate('Favoritos')}>
+        <Feather name="heart" size={24} color={'#B38CB4'} />
+      </TouchableOpacity>
 
-        <Text style={styles.label}>Telefone:</Text>
-        <Text style={styles.info}>{dados.telefone}</Text>
+      <TouchableOpacity onPress={() => navigation.navigate('Agenda')}>
+        <Feather name="calendar" size={24} color={'#4B0056'} />
+      </TouchableOpacity>
 
-        <Text style={styles.label}>Responsável:</Text>
-        <Text style={styles.info}>{dados.responsavel}</Text>
-
-        <Text style={styles.label}>Alergias:</Text>
-        <Text style={styles.info}>{dados.alergias}</Text>
-
-        <Text style={styles.label}>Observações:</Text>
-        <Text style={styles.info}>{dados.observacoes}</Text>
-      </View>
-
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>Editar Perfil</Text>
+      <TouchableOpacity
+        onPress={() => navigation.navigate('PerfilGeral')}
+      >
+        <Feather name="user" size={24} color={'#B38CB4'} />
       </TouchableOpacity>
     </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.header}>Agenda</Text>
+
+      <CalendarStrip
+        scrollable
+        style={styles.calendar}
+        calendarColor="#FAF3FB"
+        calendarHeaderStyle={{ color: '#4B0056', fontWeight: '600' }}
+        dateNumberStyle={{ color: '#4B0056', fontWeight: '600' }}
+        dateNameStyle={{ color: '#4B0056' }}
+        highlightDateNumberStyle={{ color: '#FFF' }}
+        highlightDateNameStyle={{ color: '#FFF' }}
+        highlightDateContainerStyle={{
+          backgroundColor: '#4B0056',
+          borderRadius: 16,
+        }}
+        selectedDate={moment(selectedDate)}
+        onDateSelected={(date) =>
+          setSelectedDate(date.format('YYYY-MM-DD'))
+        }
+        iconContainer={{ flex: 0.1 }}
+      />
+
+      <View style={styles.headerTabela}>
+        <Text style={styles.colunaHora}>Hora</Text>
+        <Text style={styles.colunaConsulta}>
+          Consultas agendadas
+        </Text>
+        <Feather name="list" size={18} color="#4B0056" />
+      </View>
+
+      <FlatList
+        data={agendaData[selectedDate] || []}
+        keyExtractor={(_, i) => i.toString()}
+        contentContainerStyle={{ paddingBottom: 80 }}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>Nenhuma consulta</Text>
+        }
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('DetalhesConsulta', {
+                consulta: item,
+              })
+            }
+          >
+            <View style={styles.consulta}>
+              <View style={styles.horario}>
+                <Text style={styles.horaTexto}>
+                  {item.horaInicio}
+                </Text>
+                <Text style={styles.horaTextoCinza}>
+                  {item.horaFim}
+                </Text>
+              </View>
+              <View style={styles.detalhesConsulta}>
+                <Text style={styles.consultaTitulo}>
+                  {item.especialidade}
+                </Text>
+                <Text style={styles.consultaTipo}>
+                  {item.tipo}
+                </Text>
+                <Text style={styles.consultaPaciente}>
+                  {item.paciente}
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        )}
+      />
+
+      {renderMenu()}
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-  title: { fontSize: 22, fontWeight: 'bold', color: '#4B0056', textAlign: 'center', marginBottom: 20 },
-  infoBox: {
-    backgroundColor: '#f4eef6',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
+  container: {
+    flex: 1,
+    backgroundColor: '#FFF',
+    paddingHorizontal: 20,
   },
-  label: {
+  header: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginTop: 10,
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  calendar: {
+    height: 100,
+    paddingTop: 10,
+    paddingBottom: 10,
+    marginBottom: 10,
+    borderRadius: 20,
+  },
+  headerTabela: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 10,
+    justifyContent: 'space-between',
+  },
+  colunaHora: {
     fontSize: 14,
     fontWeight: 'bold',
     color: '#4B0056',
-    marginTop: 10,
+    width: 50,
   },
-  info: {
-    fontSize: 16,
-    color: '#333',
-  },
-  button: {
-    backgroundColor: '#4B0056',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#fff',
+  colunaConsulta: {
+    fontSize: 14,
     fontWeight: 'bold',
+    color: '#4B0056',
+    flex: 1,
+  },
+  consulta: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  horario: {
+    width: 60,
+    justifyContent: 'center',
+  },
+  horaTexto: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  horaTextoCinza: {
+    fontSize: 12,
+    color: '#999',
+  },
+  detalhesConsulta: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    padding: 10,
+    paddingLeft: 15,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  consultaTitulo: {
+    color: '#4B0056',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  consultaTipo: {
+    fontSize: 13,
+    color: '#666',
+  },
+  consultaPaciente: {
+    fontSize: 14,
+    color: '#000',
+    marginTop: 4,
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 20,
+    color: '#666',
+  },
+  menu: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 60,
+    backgroundColor: '#FFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E6E6E6',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: -2 },
   },
 });

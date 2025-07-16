@@ -6,6 +6,7 @@ import LoginScreen from '../src/screens/LoginScreen';
 import CadastroScreen from '../src/screens/CadastroScreen';
 import ForgotPasswordScreen from '../src/screens/ForgotPasswordScreen';
 import AgendaScreen from '../src/screens/AgendaScreen';
+import PerfilScreen from '../src/screens/PerfilScreen';
 // Update the import path below to match the actual location and name of DetalhesConsultaScreen
 // Update the import path below to match the actual location and name of DetalhesConsultaScreen
 import DetalhesConsulta from '../src/screens/ConsultaDetalhesScreen';
@@ -22,6 +23,7 @@ export default function AppNavigation() {
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="Agenda" component={AgendaScreen} />
         <Stack.Screen name="DetalhesConsulta" component={DetalhesConsulta} />
+        <Stack.Screen name="Perfil" component={PerfilScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

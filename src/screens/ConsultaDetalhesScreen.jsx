@@ -1,3 +1,4 @@
+// src/screens/ConsultaDetalhesScreen.js
 import React from 'react';
 import {
   View,
@@ -9,31 +10,18 @@ import {
   TextInput,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import Menu from '../components/Menu';  // 1. importe o Menu
 
 export default function ConsultaDetalhesScreen({ route, navigation }) {
   const { consulta } = route.params;
 
-  const renderMenu = () => (
-    <View style={styles.menu}>
-      <TouchableOpacity onPress={() => navigation.navigate('Agenda')}>
-        <Feather name="calendar" size={24} color="#4B0056" />
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Home')}>
-        <Feather name="home" size={24} color="#B38CB4" />
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Favoritos')}>
-        <Feather name="heart" size={24} color="#B38CB4" />
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Perfil')}>
-        <Feather name="user" size={24} color="#B38CB4" />
-      </TouchableOpacity>
-    </View>
-  );
-
   return (
     <SafeAreaView style={styles.container}>
       {/* Botão Voltar */}
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.botaoVoltar}>
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        style={styles.botaoVoltar}
+      >
         <Feather name="arrow-left" size={24} color="#4B0056" />
       </TouchableOpacity>
 
@@ -46,7 +34,9 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
           <Text style={styles.texto}>{consulta.paciente}</Text>
 
           <Text style={styles.label}>Horário:</Text>
-          <Text style={styles.texto}>{consulta.horaInicio} - {consulta.horaFim}</Text>
+          <Text style={styles.texto}>
+            {consulta.horaInicio} - {consulta.horaFim}
+          </Text>
 
           <Text style={styles.label}>Especialidade:</Text>
           <Text style={styles.texto}>{consulta.especialidade}</Text>
@@ -68,16 +58,31 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
           <Text style={styles.titulo}>Informações de consulta</Text>
 
           <Text style={styles.label}>Avaliação:</Text>
-          <TextInput style={styles.input} placeholder="Digite aqui..." multiline />
+          <TextInput
+            style={styles.input}
+            placeholder="Digite aqui..."
+            multiline
+          />
 
           <Text style={styles.label}>Procedimentos realizados:</Text>
-          <TextInput style={styles.input} placeholder="Digite aqui..." multiline />
+          <TextInput
+            style={styles.input}
+            placeholder="Digite aqui..."
+            multiline
+          />
 
           <Text style={styles.label}>Recomendações:</Text>
-          <TextInput style={styles.input} placeholder="Digite aqui..." multiline />
+          <TextInput
+            style={styles.input}
+            placeholder="Digite aqui..."
+            multiline
+          />
 
           <Text style={styles.label}>Volta esperada:</Text>
-          <TextInput style={styles.input} placeholder="Ex: 6 meses" />
+          <TextInput
+            style={styles.input}
+            placeholder="Ex: 6 meses"
+          />
 
           <TouchableOpacity style={styles.botaoSalvar}>
             <Text style={styles.botaoSalvarTexto}>Salvar</Text>
@@ -85,7 +90,7 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
         </View>
       </ScrollView>
 
-      {renderMenu()}
+      <Menu />  {/* 2. substitua o menu interno pelo componente Menu */}
     </SafeAreaView>
   );
 }
@@ -175,25 +180,5 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
-  },
-  menu: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 60,
-    backgroundColor: '#FFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E6E6E6',
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: -2 },
   },
 });
