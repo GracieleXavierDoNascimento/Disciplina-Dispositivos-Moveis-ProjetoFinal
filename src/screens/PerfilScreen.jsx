@@ -1,122 +1,111 @@
 import React, { useState } from 'react';
+import Menu from '../components/Menu';          // 1. importe o componente Menu
 import {
   SafeAreaView,
   StyleSheet,
-  Text,
   View,
-  FlatList,
+  Text,
+  TextInput,
+  Image,
   TouchableOpacity,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import CalendarStrip from 'react-native-calendar-strip';
-import moment from 'moment';
 
-// Dados de exemplo...
-const agendaData = {
-  '2025-07-15': [/* ... */],
-  '2025-07-16': [/* ... */],
-};
+export default function PerfilScreen({ navigation }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
-export default function AgendaScreen({ navigation }) {
-  const [selectedDate, setSelectedDate] = useState(
-    moment().format('YYYY-MM-DD')
-  );
+  const [nome, setNome] = useState('Marvis Silva');
+  const [email, setEmail] = useState('doscmarvis@gmail.com');
+  const [telefone, setTelefone] = useState('+234 9010039271');
+  const [cro, setCro] = useState('CRO-PE 12345');
+  const [endereco, setEndereco] = useState('Rua exemplo, nº 123');
 
-  const renderMenu = () => (
-    <View style={styles.menu}>
-      <TouchableOpacity onPress={() => navigation.navigate('Home')}>
-        <Feather name="home" size={24} color={'#4B0056'} />
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => navigation.navigate('Favoritos')}>
-        <Feather name="heart" size={24} color={'#B38CB4'} />
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => navigation.navigate('Agenda')}>
-        <Feather name="calendar" size={24} color={'#4B0056'} />
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => navigation.navigate('PerfilGeral')}
-      >
-        <Feather name="user" size={24} color={'#B38CB4'} />
-      </TouchableOpacity>
-    </View>
-  );
+  const handleEditSave = () => {
+    if (isEditing) {
+      setIsEditing(false);
+      setIsSuccess(true);
+      setTimeout(() => setIsSuccess(false), 3000);
+    } else {
+      setIsEditing(true);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.header}>Agenda</Text>
-
-      <CalendarStrip
-        scrollable
-        style={styles.calendar}
-        calendarColor="#FAF3FB"
-        calendarHeaderStyle={{ color: '#4B0056', fontWeight: '600' }}
-        dateNumberStyle={{ color: '#4B0056', fontWeight: '600' }}
-        dateNameStyle={{ color: '#4B0056' }}
-        highlightDateNumberStyle={{ color: '#FFF' }}
-        highlightDateNameStyle={{ color: '#FFF' }}
-        highlightDateContainerStyle={{
-          backgroundColor: '#4B0056',
-          borderRadius: 16,
-        }}
-        selectedDate={moment(selectedDate)}
-        onDateSelected={(date) =>
-          setSelectedDate(date.format('YYYY-MM-DD'))
-        }
-        iconContainer={{ flex: 0.1 }}
-      />
-
-      <View style={styles.headerTabela}>
-        <Text style={styles.colunaHora}>Hora</Text>
-        <Text style={styles.colunaConsulta}>
-          Consultas agendadas
-        </Text>
-        <Feather name="list" size={18} color="#4B0056" />
+      {/* Botão de logout */}
+      <View style={styles.logoutContainer}>
+        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+          <Feather name="log-out" size={22} color="#4B0056" />
+        </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={agendaData[selectedDate] || []}
-        keyExtractor={(_, i) => i.toString()}
-        contentContainerStyle={{ paddingBottom: 80 }}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>Nenhuma consulta</Text>
-        }
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('DetalhesConsulta', {
-                consulta: item,
-              })
-            }
-          >
-            <View style={styles.consulta}>
-              <View style={styles.horario}>
-                <Text style={styles.horaTexto}>
-                  {item.horaInicio}
-                </Text>
-                <Text style={styles.horaTextoCinza}>
-                  {item.horaFim}
-                </Text>
-              </View>
-              <View style={styles.detalhesConsulta}>
-                <Text style={styles.consultaTitulo}>
-                  {item.especialidade}
-                </Text>
-                <Text style={styles.consultaTipo}>
-                  {item.tipo}
-                </Text>
-                <Text style={styles.consultaPaciente}>
-                  {item.paciente}
-                </Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-        )}
-      />
+      {/* Banner de sucesso */}
+      {isSuccess && (
+        <View style={styles.successBanner}>
+          <Text style={styles.successText}>Perfil atualizado com sucesso!</Text>
+        </View>
+      )}
 
-      {renderMenu()}
+      <View style={styles.content}>
+        <Text style={styles.header}>Informações pessoais</Text>
+        <Text style={styles.saudacao}>Olá, {nome}</Text>
+
+        <View style={styles.card}>
+          <View style={styles.avatarContainer}>
+            <Image
+              source={{
+                uri: 'https://cdn-icons-png.flaticon.com/512/921/921087.png',
+              }}
+              style={styles.avatar}
+            />
+          </View>
+
+          <TextInput
+            style={styles.input}
+            value={nome}
+            onChangeText={setNome}
+            editable={isEditing}
+          />
+          <TextInput
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            editable={isEditing}
+          />
+          <TextInput
+            style={styles.input}
+            value={telefone}
+            onChangeText={setTelefone}
+            editable={isEditing}
+          />
+          <TextInput
+            style={styles.input}
+            value={cro}
+            onChangeText={setCro}
+            editable={isEditing}
+          />
+          <TextInput
+            style={styles.input}
+            value={endereco}
+            onChangeText={setEndereco}
+            editable={isEditing}
+          />
+
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={handleEditSave}
+          >
+            <Feather
+              name={isEditing ? 'check' : 'edit-2'}
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+     <Menu />    {/* 2. use o componente Menu */}
     </SafeAreaView>
   );
 }
@@ -125,87 +114,79 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFF',
+  },
+  logoutContainer: {
+    alignItems: 'flex-end',
     paddingHorizontal: 20,
+    paddingTop: 10,
+  },
+  successBanner: {
+    backgroundColor: '#C5F1C8',
+    padding: 12,
+    marginHorizontal: 20,
+    marginTop: 10,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  successText: {
+    color: '#1A4D1A',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 60,
   },
   header: {
-    fontSize: 20,
+    textAlign: 'center',
+    fontSize: 16,
     fontWeight: '600',
-    marginTop: 10,
-    marginBottom: 15,
-    textAlign: 'center',
+    color: '#4B0056',
   },
-  calendar: {
-    height: 100,
-    paddingTop: 10,
-    paddingBottom: 10,
-    marginBottom: 10,
+  saudacao: {
+    textAlign: 'center',
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginVertical: 15,
+    color: '#000',
+  },
+  card: {
+    backgroundColor: '#FAF3FB',
     borderRadius: 20,
-  },
-  headerTabela: {
-    flexDirection: 'row',
+    padding: 20,
     alignItems: 'center',
-    marginVertical: 10,
-    justifyContent: 'space-between',
-  },
-  colunaHora: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#4B0056',
-    width: 50,
-  },
-  colunaConsulta: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#4B0056',
-    flex: 1,
-  },
-  consulta: {
-    flexDirection: 'row',
-    marginBottom: 12,
-  },
-  horario: {
-    width: 60,
-    justifyContent: 'center',
-  },
-  horaTexto: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: '#000',
-  },
-  horaTextoCinza: {
-    fontSize: 12,
-    color: '#999',
-  },
-  detalhesConsulta: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 10,
-    paddingLeft: 15,
     elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    position: 'relative',
   },
-  consultaTitulo: {
-    color: '#4B0056',
-    fontWeight: 'bold',
-    fontSize: 14,
+  avatarContainer: {
+    backgroundColor: '#FFD5EC',
+    borderRadius: 20,
+    padding: 10,
+    marginBottom: 15,
   },
-  consultaTipo: {
-    fontSize: 13,
-    color: '#666',
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 10,
   },
-  consultaPaciente: {
-    fontSize: 14,
+  input: {
+    width: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 10,
+    marginVertical: 5,
     color: '#000',
-    marginTop: 4,
   },
-  emptyText: {
-    textAlign: 'center',
-    marginTop: 20,
-    color: '#666',
+  editButton: {
+    backgroundColor: '#4B0056',
+    borderRadius: 25,
+    padding: 12,
+    position: 'absolute',
+    bottom: -25,
+    alignSelf: 'center',
+    elevation: 5,
   },
   menu: {
     position: 'absolute',
@@ -222,9 +203,5 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15,
     elevation: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: -2 },
   },
 });

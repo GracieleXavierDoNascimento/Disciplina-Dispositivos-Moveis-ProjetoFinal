@@ -1,14 +1,13 @@
-// src/components/Menu.js
 import React, { memo, useCallback } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
 
 const MENU_ITEMS = [
-  { key: 'home',     icon: 'home',     screen: 'Agenda'      },
-  { key: 'favoritos',icon: 'heart',    screen: 'Favoritos'   },
-  { key: 'agenda',   icon: 'calendar', screen: 'Historico'      },
-  { key: 'perfil',   icon: 'user',     screen: 'Perfil'      },
+  { key: 'home',     icon: 'home',     screen: 'Agenda' },
+  { key: 'favoritos',icon: 'heart',    screen: 'Disponibilidade' }, // atualizado aqui
+  { key: 'agenda',   icon: 'calendar', screen: 'Historico' },
+  { key: 'perfil',   icon: 'user',     screen: 'Perfil' },
 ];
 
 function Menu() {
@@ -34,14 +33,14 @@ function Menu() {
             onPress={() => handlePress(item.screen)}
             style={[
               styles.button,
-              isActive && styles.activeButton,      // fundo roxo claro
-              isActive && styles.activeBorder,      // borda superior
+              isActive && styles.activeButton,
+              isActive && styles.activeBorder,
             ]}
           >
             <Feather
               name={item.icon}
               size={24}
-              color={isActive ? '#4B0056' : '#B38CB4'}  // ícone roxo escuro ou claro
+              color={isActive ? '#4B0056' : '#B38CB4'}
             />
           </TouchableOpacity>
         );
