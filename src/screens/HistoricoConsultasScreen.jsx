@@ -1,4 +1,4 @@
-// src/screens/AgendaScreen.js
+// src/screens/HistoricoConsultasScreen.js
 import React, { useState } from 'react';
 import {
   SafeAreaView,
@@ -12,10 +12,10 @@ import { Feather } from '@expo/vector-icons';
 import CalendarStrip from 'react-native-calendar-strip';
 import moment from 'moment';
 
-import Menu from '../components/Menu';          // 1. importe o componente Menu
+import Menu from '../components/Menu';
 
 const agendaData = {
-  '2025-07-15': [
+  '2025-07-14': [
     {
       horaInicio: '09:00',
       horaFim: '09:30',
@@ -23,6 +23,8 @@ const agendaData = {
       tipo: 'Particular',
       paciente: 'Victor Araujo',
     },
+  ],
+  '2025-07-13': [
     {
       horaInicio: '14:00',
       horaFim: '14:30',
@@ -31,25 +33,21 @@ const agendaData = {
       paciente: 'Natália Silva',
     },
   ],
-  '2025-07-16': [
-    {
-      horaInicio: '11:00',
-      horaFim: '11:30',
-      especialidade: 'Clínico Geral',
-      tipo: 'Convênio',
-      paciente: 'Hugo Pontes',
-    },
-  ],
 };
 
-export default function AgendaScreen({ navigation }) {
-  const [selectedDate, setSelectedDate] = useState(
-    moment().format('YYYY-MM-DD')
-  );
+export default function HistoricoConsultasScreen({ navigation }) {
+  const hoje = moment();
+  const [selectedDate, setSelectedDate] = useState(hoje.format('YYYY-MM-DD'));
+
+  const isPastDate = (date) => moment(date).isBefore(hoje, 'day');
+
+  const consultasDoDia = isPastDate(selectedDate)
+    ? agendaData[selectedDate] || []
+    : [];
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.header}>Agenda</Text>
+      <Text style={styles.header}>Histórico de Consultas</Text>
 
       <CalendarStrip
         scrollable
@@ -65,24 +63,24 @@ export default function AgendaScreen({ navigation }) {
           borderRadius: 16,
         }}
         selectedDate={moment(selectedDate)}
-        onDateSelected={(date) =>
-          setSelectedDate(date.format('YYYY-MM-DD'))
-        }
+        onDateSelected={(date) => setSelectedDate(date.format('YYYY-MM-DD'))}
         iconContainer={{ flex: 0.1 }}
       />
 
       <View style={styles.headerTabela}>
         <Text style={styles.colunaHora}>Hora</Text>
-        <Text style={styles.colunaConsulta}>Consultas agendadas</Text>
-        <Feather name="list" size={18} color="#4B0056" />
+        <Text style={styles.colunaConsulta}>Consultas realizadas</Text>
+        <Feather name="clock" size={18} color="#4B0056" />
       </View>
 
       <FlatList
-        data={agendaData[selectedDate] || []}
+        data={consultasDoDia}
         keyExtractor={(_, idx) => idx.toString()}
         contentContainerStyle={{ paddingBottom: 80 }}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>Nenhuma consulta</Text>
+          <Text style={styles.emptyText}>
+            Nenhuma consulta realizada nesse dia
+          </Text>
         }
         renderItem={({ item }) => (
           <TouchableOpacity
@@ -107,7 +105,7 @@ export default function AgendaScreen({ navigation }) {
         )}
       />
 
-      <Menu />    {/* 2. use o componente Menu */}
+      <Menu />
     </SafeAreaView>
   );
 }

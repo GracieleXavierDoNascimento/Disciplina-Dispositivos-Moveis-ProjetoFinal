@@ -1,74 +1,207 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import Menu from '../components/Menu';          // 1. importe o componente Menu
+import {
+  SafeAreaView,
+  StyleSheet,
+  View,
+  Text,
+  TextInput,
+  Image,
+  TouchableOpacity,
+} from 'react-native';
+import { Feather } from '@expo/vector-icons';
 
-export default function PerfilPacienteScreen() {
-  const dados = {
-    nome: 'Maria Eduarda',
-    dataNascimento: '12/04/2018',
-    telefone: '(11) 99999-9999',
-    responsavel: 'Ana Paula Silva',
-    alergias: 'Nenhuma',
-    observacoes: 'Não gosta de anestesia',
+export default function PerfilScreen({ navigation }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const [nome, setNome] = useState('Marvis Silva');
+  const [email, setEmail] = useState('doscmarvis@gmail.com');
+  const [telefone, setTelefone] = useState('+234 9010039271');
+  const [cro, setCro] = useState('CRO-PE 12345');
+  const [endereco, setEndereco] = useState('Rua exemplo, nº 123');
+
+  const handleEditSave = () => {
+    if (isEditing) {
+      setIsEditing(false);
+      setIsSuccess(true);
+      setTimeout(() => setIsSuccess(false), 3000);
+    } else {
+      setIsEditing(true);
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Perfil do Paciente</Text>
-
-      <View style={styles.infoBox}>
-        <Text style={styles.label}>Nome:</Text>
-        <Text style={styles.info}>{dados.nome}</Text>
-
-        <Text style={styles.label}>Data de Nascimento:</Text>
-        <Text style={styles.info}>{dados.dataNascimento}</Text>
-
-        <Text style={styles.label}>Telefone:</Text>
-        <Text style={styles.info}>{dados.telefone}</Text>
-
-        <Text style={styles.label}>Responsável:</Text>
-        <Text style={styles.info}>{dados.responsavel}</Text>
-
-        <Text style={styles.label}>Alergias:</Text>
-        <Text style={styles.info}>{dados.alergias}</Text>
-
-        <Text style={styles.label}>Observações:</Text>
-        <Text style={styles.info}>{dados.observacoes}</Text>
+    <SafeAreaView style={styles.container}>
+      {/* Botão de logout */}
+      <View style={styles.logoutContainer}>
+        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+          <Feather name="log-out" size={22} color="#4B0056" />
+        </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>Editar Perfil</Text>
-      </TouchableOpacity>
-    </View>
+      {/* Banner de sucesso */}
+      {isSuccess && (
+        <View style={styles.successBanner}>
+          <Text style={styles.successText}>Perfil atualizado com sucesso!</Text>
+        </View>
+      )}
+
+      <View style={styles.content}>
+        <Text style={styles.header}>Informações pessoais</Text>
+        <Text style={styles.saudacao}>Olá, {nome}</Text>
+
+        <View style={styles.card}>
+          <View style={styles.avatarContainer}>
+            <Image
+              source={{
+                uri: 'https://cdn-icons-png.flaticon.com/512/921/921087.png',
+              }}
+              style={styles.avatar}
+            />
+          </View>
+
+          <TextInput
+            style={styles.input}
+            value={nome}
+            onChangeText={setNome}
+            editable={isEditing}
+          />
+          <TextInput
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            editable={isEditing}
+          />
+          <TextInput
+            style={styles.input}
+            value={telefone}
+            onChangeText={setTelefone}
+            editable={isEditing}
+          />
+          <TextInput
+            style={styles.input}
+            value={cro}
+            onChangeText={setCro}
+            editable={isEditing}
+          />
+          <TextInput
+            style={styles.input}
+            value={endereco}
+            onChangeText={setEndereco}
+            editable={isEditing}
+          />
+
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={handleEditSave}
+          >
+            <Feather
+              name={isEditing ? 'check' : 'edit-2'}
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+     <Menu />    {/* 2. use o componente Menu */}
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-  title: { fontSize: 22, fontWeight: 'bold', color: '#4B0056', textAlign: 'center', marginBottom: 20 },
-  infoBox: {
-    backgroundColor: '#f4eef6',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
+  container: {
+    flex: 1,
+    backgroundColor: '#FFF',
   },
-  label: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#4B0056',
+  logoutContainer: {
+    alignItems: 'flex-end',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+  },
+  successBanner: {
+    backgroundColor: '#C5F1C8',
+    padding: 12,
+    marginHorizontal: 20,
     marginTop: 10,
-  },
-  info: {
-    fontSize: 16,
-    color: '#333',
-  },
-  button: {
-    backgroundColor: '#4B0056',
-    padding: 15,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: 'center',
   },
-  buttonText: {
-    color: '#fff',
+  successText: {
+    color: '#1A4D1A',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 60,
+  },
+  header: {
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4B0056',
+  },
+  saudacao: {
+    textAlign: 'center',
+    fontSize: 22,
     fontWeight: 'bold',
+    marginVertical: 15,
+    color: '#000',
+  },
+  card: {
+    backgroundColor: '#FAF3FB',
+    borderRadius: 20,
+    padding: 20,
+    alignItems: 'center',
+    elevation: 3,
+    position: 'relative',
+  },
+  avatarContainer: {
+    backgroundColor: '#FFD5EC',
+    borderRadius: 20,
+    padding: 10,
+    marginBottom: 15,
+  },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 10,
+  },
+  input: {
+    width: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 10,
+    marginVertical: 5,
+    color: '#000',
+  },
+  editButton: {
+    backgroundColor: '#4B0056',
+    borderRadius: 25,
+    padding: 12,
+    position: 'absolute',
+    bottom: -25,
+    alignSelf: 'center',
+    elevation: 5,
+  },
+  menu: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 60,
+    backgroundColor: '#FFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E6E6E6',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    elevation: 10,
   },
 });
