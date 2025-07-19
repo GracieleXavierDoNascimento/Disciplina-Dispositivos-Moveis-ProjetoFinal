@@ -14,7 +14,7 @@ const { width } = Dimensions.get('window');
 
 export default function CadastroScreen({ navigation }) {
   const [tab, setTab] = useState('cadastro');
-  const [tipoCadastro, setTipoCadastro] = useState(null); // 'paciente' | 'dentista'
+  const [tipoCadastro, setTipoCadastro] = useState(null);
   const [passo, setPasso] = useState(1);
 
   // Dados comuns
@@ -114,7 +114,6 @@ export default function CadastroScreen({ navigation }) {
       });
   }
 
-  /*  Escolha de tipo de cadastro */
   function renderCadastroContent() {
     if (!tipoCadastro) {
       return (

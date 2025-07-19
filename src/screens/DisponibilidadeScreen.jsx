@@ -75,7 +75,7 @@ export default function DisponibilidadeScreen() {
 
         // console.log("decodificado: ", decoded)
 
-        const id = decoded.id;
+        const id = decoded.id || decoded.sus;
         // console.log('ID extraído do token:', id);
 
         const response = await api.post(`/diasAtendimento/${id}`, buildRequestBody());
@@ -91,11 +91,12 @@ export default function DisponibilidadeScreen() {
 
     postDisponibilidade();
   };
+
   function decodeJWTPayload(token) {
-  const payload = token.split('.')[1];
-  const decodedPayload = Buffer.from(payload, 'base64').toString('utf8');
-  return JSON.parse(decodedPayload);
-}
+    const payload = token.split('.')[1];
+    const decodedPayload = Buffer.from(payload, 'base64').toString('utf8');
+    return JSON.parse(decodedPayload);
+  }
 
   function buildRequestBody() {
     const dia = String(selectedDay).padStart(2, '0');

@@ -24,7 +24,6 @@ export default function ForgotPasswordScreen({ navigation }) {
   };
 
   const handleValidarCodigo = () => {
-    // Aqui você poderia validar o código com backend se desejar.
     console.log('Código digitado:', codigo);
     setPasso(3);
   };

@@ -1,18 +1,18 @@
 // src/screens/AgendaScreen.js
+import { Feather } from '@expo/vector-icons';
+import moment from 'moment';
 import React, { useState } from 'react';
 import {
+  FlatList,
   SafeAreaView,
   StyleSheet,
   Text,
-  View,
-  FlatList,
   TouchableOpacity,
+  View,
 } from 'react-native';
-import { Feather } from '@expo/vector-icons';
 import CalendarStrip from 'react-native-calendar-strip';
-import moment from 'moment';
 
-import Menu from '../components/Menu';          // 1. importe o componente Menu
+import Menu from '../components/Menu'; // 1. importe o componente Menu
 
 const agendaData = {
   '2025-07-15': [

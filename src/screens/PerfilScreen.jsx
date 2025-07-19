@@ -1,25 +1,32 @@
+import { Feather } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import Menu from '../components/Menu';          // 1. importe o componente Menu
 import {
+  Image,
   SafeAreaView,
   StyleSheet,
-  View,
   Text,
   TextInput,
-  Image,
   TouchableOpacity,
+  View,
 } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import Menu from '../components/Menu'; // 1. importe o componente Menu
 
 export default function PerfilScreen({ navigation }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const [nome, setNome] = useState('Marvis Silva');
-  const [email, setEmail] = useState('doscmarvis@gmail.com');
-  const [telefone, setTelefone] = useState('+234 9010039271');
-  const [cro, setCro] = useState('CRO-PE 12345');
-  const [endereco, setEndereco] = useState('Rua exemplo, nº 123');
+  //Dados em comum
+  const [nome, setNome] = useState();
+  const [email, setEmail] = useState();
+  const [telefone, setTelefone] = useState();
+  const [cro, setCro] = useState();
+
+  //Endereço
+  const [rua, setRua] = useState();
+  const [cidade, setCidade] = useState();
+  const [bairro, setBairro] = useState();
+  const [numero, setNumero] = useState();
+  const [cep, setCep] = useState();
 
   const handleEditSave = () => {
     if (isEditing) {
