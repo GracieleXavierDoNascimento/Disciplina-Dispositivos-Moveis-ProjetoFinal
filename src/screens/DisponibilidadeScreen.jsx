@@ -1,31 +1,34 @@
+import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Buffer } from 'buffer';
 import React, { useState } from 'react';
 import {
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
-  View,
   TouchableOpacity,
-  ScrollView,
-  Modal,
-  TextInput,
+  View
 } from 'react-native';
-import { Feather } from '@expo/vector-icons';
 import Menu from '../components/Menu';
+import api from '../services/api';
 
 // Data atual
 const hoje = new Date();
+
 const diaAtual = hoje.getDate();
 const mesAtual = hoje.getMonth();
 const anoAtual = hoje.getFullYear();
 
 export default function DisponibilidadeScreen() {
   const [selectedDay, setSelectedDay] = useState(diaAtual);
+  const [selectedMonth, setSelectedMonth] = useState(mesAtual);
+  const [selectedYear, setSelectedYear] = useState(anoAtual);
   const [selectedTime, setSelectedTime] = useState(null);
-  const [selectedSpecialty, setSelectedSpecialty] = useState('');
-  const [isModalVisible, setModalVisible] = useState(false);
   const [patientName, setPatientName] = useState('');
   const [patientPhone, setPatientPhone] = useState('');
   const [monthOffset, setMonthOffset] = useState(0);
+  const jwtDecode = require('jwt-decode').default || require('jwt-decode');
 
   const monthNames = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -41,6 +44,7 @@ export default function DisponibilidadeScreen() {
   const daysInMonth = new Date(displayYear, displayMonthIndex + 1, 0).getDate();
   const daysOfMonth = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
+
   const allTimes = [
     '8:00', '9:00', '11:00',
     '12:00', '14:00', '15:00',
@@ -48,6 +52,7 @@ export default function DisponibilidadeScreen() {
   ];
 
   const handleDaySelect = (day) => {
+    // console.log(day)
     setSelectedDay(day);
     setSelectedTime(null); // limpa horário ao trocar o dia
   };
@@ -57,9 +62,59 @@ export default function DisponibilidadeScreen() {
   };
 
   const handleSave = () => {
-    if (!selectedDay || !selectedTime || !selectedSpecialty) return;
-    setModalVisible(true); // abre modal
+    if (!selectedDay || !selectedTime) return;
+
+
+
+    const postDisponibilidade = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+
+        console.log(token)
+        const decoded = decodeJWTPayload(token);
+
+        // console.log("decodificado: ", decoded)
+
+        const id = decoded.id;
+        // console.log('ID extraído do token:', id);
+
+        const response = await api.post(`/diasAtendimento/${id}`, buildRequestBody());
+        if (response) {
+          console.log("Dia cadastrado com sucesso!");
+        } else {
+          console.log("erro na tentativaa de cadastar o dia!")
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+      }
+    };
+
+    postDisponibilidade();
   };
+  function decodeJWTPayload(token) {
+  const payload = token.split('.')[1];
+  const decodedPayload = Buffer.from(payload, 'base64').toString('utf8');
+  return JSON.parse(decodedPayload);
+}
+
+  function buildRequestBody() {
+    const dia = String(selectedDay).padStart(2, '0');
+    const mes = String(displayMonthIndex + 1).padStart(2, '0');
+    const ano = String(displayYear);
+
+    const [hora, minuto = '00'] = selectedTime.split(':');
+    const horaFormatada = `${hora.padStart(2, '0')}:${minuto.padStart(2, '0')}:00`;
+
+    return {
+      horarios: [
+        {
+          horario: `${ano}-${mes}-${dia} ${horaFormatada}`
+        }
+      ]
+    };
+  }
+
+
 
   const handleConfirm = () => {
     console.log('Reserva:', {
@@ -79,12 +134,14 @@ export default function DisponibilidadeScreen() {
 
   const handlePrevMonth = () => {
     setMonthOffset((offset) => offset - 1);
+    setSelectedMonth(monthOffset);
     setSelectedDay(null);
     setSelectedTime(null);
   };
 
   const handleNextMonth = () => {
     setMonthOffset((offset) => offset + 1);
+    setSelectedMonth(monthOffset);
     setSelectedDay(null);
     setSelectedTime(null);
   };
@@ -149,52 +206,11 @@ export default function DisponibilidadeScreen() {
             ))}
           </View>
 
-          <Text style={styles.subtitle}>Especialidade:</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Digite a especialidade"
-            value={selectedSpecialty}
-            onChangeText={setSelectedSpecialty}
-          />
-
           <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
             <Text style={styles.saveBtnText}>Salvar</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
-
-      <Modal
-        visible={isModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.subtitle}>Nome do paciente:</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Nome completo"
-              value={patientName}
-              onChangeText={setPatientName}
-            />
-            <Text style={styles.subtitle}>Telefone:</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="(00) 00000-0000"
-              keyboardType="phone-pad"
-              value={patientPhone}
-              onChangeText={setPatientPhone}
-            />
-            <TouchableOpacity
-              style={styles.saveBtn}
-              onPress={handleConfirm}
-            >
-              <Text style={styles.saveBtnText}>Confirmar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
 
       <Menu />
     </SafeAreaView>

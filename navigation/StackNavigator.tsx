@@ -4,7 +4,9 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AgendaScreen from '../src/screens/AgendaScreen';
 import CadastroScreen from '../src/screens/CadastroScreen';
 import ForgotPasswordScreen from '../src/screens/ForgotPasswordScreen';
+import LoginScreen from '../src/screens/LoginScreen';
 import PerfilScreen from '../src/screens/PerfilScreen';
+import SplashScreen from '../src/screens/SplashScreen';
 // Update the import path below to match the actual location and name of DetalhesConsultaScreen
 // Update the import path below to match the actual location and name of DetalhesConsultaScreen
 import DetalhesConsulta from '../src/screens/ConsultaDetalhesScreen';

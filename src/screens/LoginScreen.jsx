@@ -1,6 +1,8 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
+  Alert,
   Dimensions,
   StyleSheet,
   Text,
@@ -8,12 +10,42 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import api from '../services/api';
 
 const { height } = Dimensions.get('window');
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+
+  const Login = () => {
+    api.post('/auth', {
+      email,
+      senha
+    })
+      .then(async (response) => {
+        const token = response.data.token;
+        const tipoUsuario = response.data.tipoUsuario;
+
+
+        await AsyncStorage.setItem('token', token);
+        await AsyncStorage.setItem('tipoUsuario', tipoUsuario);
+
+        if (tipoUsuario === 'ROLE_PACIENTE') {
+          navigation.navigate('Login');
+        } else if (tipoUsuario === 'ROLE_DENTISTA') {
+          navigation.navigate('Agenda');
+        } else {
+          Alert.alert("Tipo de usuario invalido!")
+        }
+      }).catch((error) => {
+        if (error.response?.data?.errors) {
+          error.response.data.errors.forEach(err => console.log(err.defaultMessage));
+        } else {
+          console.log(error.response?.data?.message || 'Erro ao tentar se conectar.');
+        }
+      })
+  }
 
   return (
     <View style={styles.container}>
@@ -62,8 +94,8 @@ export default function LoginScreen({ navigation }) {
       <View style={styles.bottomArea}>
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate('Agenda')}
-          >
+          onPress={() => Login()}
+        >
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
       </View>
@@ -84,7 +116,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
-    display:'flex',
+    display: 'flex',
     paddingTop: 40,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -103,7 +135,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    bottom:0
+    bottom: 0
   },
   tab: {
     fontSize: 20,

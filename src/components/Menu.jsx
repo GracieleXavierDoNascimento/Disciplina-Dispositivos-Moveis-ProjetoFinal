@@ -1,12 +1,12 @@
-import React, { memo, useCallback } from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { useNavigation, useRoute, CommonActions } from '@react-navigation/native';
+import { CommonActions, useNavigation, useRoute } from '@react-navigation/native';
+import React, { memo, useCallback } from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 const MENU_ITEMS = [
   { key: 'home',     icon: 'home',     screen: 'Agenda' },
-  { key: 'favoritos',icon: 'heart',    screen: 'Disponibilidade' }, // atualizado aqui
-  { key: 'agenda',   icon: 'calendar', screen: 'Historico' },
+  { key: 'favoritos',icon: 'calendar',    screen: 'Disponibilidade' }, // atualizado aqui
+  { key: 'agenda',   icon: 'rotate-ccw', screen: 'Historico' },
   { key: 'perfil',   icon: 'user',     screen: 'Perfil' },
 ];
 
