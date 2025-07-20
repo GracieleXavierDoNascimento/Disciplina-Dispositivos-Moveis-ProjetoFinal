@@ -53,7 +53,7 @@ export default function AgendaScreen({ navigation }) {
 
       if (response.ok) {
         const data = await response.json();
-        
+
         // Mapear dados da API para a estrutura esperada
         const consultasFormatadas = data.map(consulta => ({
           id: consulta.id,
@@ -64,6 +64,7 @@ export default function AgendaScreen({ navigation }) {
           avaliacao: consulta.avaliacao,
           recomendacoes: consulta.recomendacoes,
           voltaEsperada: consulta.voltaEsperada,
+          statusConsulta: consulta.statusConsulta,
         }));
 
         setConsultas(consultasFormatadas);
@@ -152,8 +153,41 @@ export default function AgendaScreen({ navigation }) {
                 <Text style={styles.horaTexto}>{item.horaInicio}</Text>
               </View>
               <View style={styles.detalhesConsulta}>
-                <Text style={styles.consultaPaciente}>{item.paciente}</Text>
-                <Text style={styles.consultaMotivo}>{item.motivo}</Text>
+                <View>
+                  <Text style={styles.consultaPaciente}>{item.paciente}</Text>
+                  <Text style={styles.consultaMotivo}>{item.motivoConsulta || "Motivo não informado"}</Text>
+                </View>
+                <View style={[
+                  styles.statusContainer,
+                  {
+                    backgroundColor:
+                      item.statusConsulta === 1
+                        ? 'rgba(0, 123, 255, 0.2)' // Azul com transparência
+                        : item.statusConsulta === 2
+                          ? 'rgba(40, 167, 69, 0.2)' // Verde com transparência
+                          : 'rgba(220, 53, 69, 0.2)' // Vermelho com transparência
+                  }
+                ]}>
+                  <Text style={[
+                    styles.statusText,
+                    {
+                      color:
+                        item.statusConsulta === 1
+                          ? '#007bff' // Azul
+                          : item.statusConsulta === 2
+                            ? '#28a745' // Verde
+                            : '#dc3545' // Vermelho
+                    }
+                  ]}>
+                    {
+                      item.statusConsulta === 1
+                        ? "Agendada"
+                        : item.statusConsulta === 2
+                          ? "Finalizada"
+                          : "Cancelada"
+                    }
+                  </Text>
+                </View>
               </View>
             </View>
           </TouchableOpacity>
@@ -218,6 +252,8 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   detalhesConsulta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     flex: 1,
     backgroundColor: '#fff',
     borderRadius: 15,
@@ -228,6 +264,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   consultaPaciente: {
     fontSize: 14,

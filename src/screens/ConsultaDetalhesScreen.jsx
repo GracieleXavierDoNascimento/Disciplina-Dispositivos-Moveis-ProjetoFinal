@@ -13,7 +13,6 @@ import {
 } from 'react-native';
 import Menu from '../components/Menu';
 
-// 🔧 Componente extraído para fora
 const EditableField = ({
   label,
   value,
@@ -55,14 +54,11 @@ const EditableField = ({
 export default function ConsultaDetalhesScreen({ route, navigation }) {
   const { consulta } = route.params;
 
-  console.log('Consulta recebida:', consulta);
-
   const [avaliacao, setAvaliacao] = useState(consulta.avaliacao || '');
   const [procedimentosRealizados, setProcedimentosRealizados] = useState(consulta.procedimentosRealizados || '');
   const [recomendacoes, setRecomendacoes] = useState(consulta.recomendacoes || '');
   const [voltaEsperada, setVoltaEsperada] = useState(consulta.voltaEsperada || '');
   const [loading, setLoading] = useState(false);
-
   const [editMode, setEditMode] = useState({
     avaliacao: consulta.avaliacao === null || consulta.avaliacao === '',
     procedimentosRealizados: consulta.procedimentosRealizados === null || consulta.procedimentosRealizados === '',
@@ -113,6 +109,34 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
     }
   };
 
+  const deletarConsulta = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/consulta/cancelar/${consulta.id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.ok) {
+        Alert.alert('Sucesso', 'Consulta deletada com sucesso!', [
+          { text: 'OK', onPress: () => navigation.goBack() }
+        ]);
+      } else {
+        throw new Error('Erro ao deletar consulta');
+      }
+    } catch (error) {
+      console.error('Erro ao deletar consulta:', error);
+      Alert.alert('Erro', 'Não foi possível deletar a consulta');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <TouchableOpacity
@@ -126,84 +150,123 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
         <Text style={styles.header}>Manutenção agenda</Text>
 
         <View style={styles.box}>
-          <Text style={styles.titulo}>Consulta agendada</Text>
+          <View style={styles.titleContainer}>
+            <Text style={styles.titulo}>Informações:</Text>
+            <View style={[
+              styles.statusContainer,
+              {
+                backgroundColor:
+                  consulta.statusConsulta === 1
+                    ? 'rgba(0, 123, 255, 0.2)' // Azul com transparência
+                    : consulta.statusConsulta === 2
+                      ? 'rgba(40, 167, 69, 0.2)' // Verde com transparência
+                      : 'rgba(220, 53, 69, 0.2)' // Vermelho com transparência
+              }
+            ]}>
+              <Text style={[
+                styles.statusText,
+                {
+                  color:
+                    consulta.statusConsulta === 1
+                      ? '#007bff' // Azul
+                      : consulta.statusConsulta === 2
+                        ? '#28a745' // Verde
+                        : '#dc3545' // Vermelho
+                }
+              ]}>
+                {
+                  consulta.statusConsulta === 1
+                    ? "Agendada"
+                    : consulta.statusConsulta === 2
+                      ? "Finalizada"
+                      : "Cancelada"
+                }
+              </Text>
+            </View>
+          </View>
           <Text style={styles.label}>Paciente:</Text>
           <Text style={styles.texto}>{consulta.paciente}</Text>
 
           <Text style={styles.label}>Horário:</Text>
           <Text style={styles.texto}>{consulta.horaInicio}</Text>
 
-          <Text style={styles.label}>Especialidade:</Text>
-          <Text style={styles.texto}>{consulta.especialidade}</Text>
-
           <Text style={styles.label}>Motivo da consulta:</Text>
           <Text style={styles.texto}>{consulta.motivoConsulta || 'Não informado'}</Text>
 
           <View style={styles.botoes}>
-            <TouchableOpacity style={styles.botaoCinza}>
-              <Text style={styles.botaoTextoCinza}>Cancelar consulta</Text>
-            </TouchableOpacity>
+            {consulta.statusConsulta !== 3 ? (
+              <TouchableOpacity
+                style={styles.botaoCinza}
+                onPress={deletarConsulta}
+              >
+                <Text style={styles.botaoTextoCinza}>Cancelar consulta</Text>
+              </TouchableOpacity>
+            ) : null}
           </View>
         </View>
 
-        <View style={styles.box}>
-          <Text style={styles.titulo}>Informações de consulta</Text>
+        {consulta.statusConsulta !== 3 ? (
 
-          <EditableField
-            label="Avaliação"
-            value={avaliacao}
-            onChangeText={setAvaliacao}
-            field="avaliacao"
-            multiline
-            placeholder="Digite aqui..."
-            editMode={editMode}
-            toggleEditMode={toggleEditMode}
-          />
+          <View style={styles.box}>
+            <Text style={styles.titulo}>Anotações:</Text>
 
-          <EditableField
-            label="Procedimentos realizados"
-            value={procedimentosRealizados}
-            onChangeText={setProcedimentosRealizados}
-            field="procedimentosRealizados"
-            multiline
-            placeholder="Digite aqui..."
-            editMode={editMode}
-            toggleEditMode={toggleEditMode}
-          />
+            <EditableField
+              label="Avaliação"
+              value={avaliacao}
+              onChangeText={setAvaliacao}
+              field="avaliacao"
+              multiline
+              placeholder="Digite aqui..."
+              editMode={editMode}
+              toggleEditMode={toggleEditMode}
+            />
 
-          <EditableField
-            label="Recomendações"
-            value={recomendacoes}
-            onChangeText={setRecomendacoes}
-            field="recomendacoes"
-            multiline
-            placeholder="Digite aqui..."
-            editMode={editMode}
-            toggleEditMode={toggleEditMode}
-          />
+            <EditableField
+              label="Procedimentos realizados"
+              value={procedimentosRealizados}
+              onChangeText={setProcedimentosRealizados}
+              field="procedimentosRealizados"
+              multiline
+              placeholder="Digite aqui..."
+              editMode={editMode}
+              toggleEditMode={toggleEditMode}
+            />
 
-          <EditableField
-            label="Volta esperada"
-            value={voltaEsperada}
-            onChangeText={setVoltaEsperada}
-            field="voltaEsperada"
-            placeholder="Ex: 6 meses"
-            editMode={editMode}
-            toggleEditMode={toggleEditMode}
-          />
+            <EditableField
+              label="Recomendações"
+              value={recomendacoes}
+              onChangeText={setRecomendacoes}
+              field="recomendacoes"
+              multiline
+              placeholder="Digite aqui..."
+              editMode={editMode}
+              toggleEditMode={toggleEditMode}
+            />
 
-          <TouchableOpacity
-            style={styles.botaoSalvar}
-            onPress={atualizarConsulta}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color="#FFF" />
-            ) : (
-              <Text style={styles.botaoSalvarTexto}>Salvar</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+            <EditableField
+              label="Volta esperada"
+              value={voltaEsperada}
+              onChangeText={setVoltaEsperada}
+              field="voltaEsperada"
+              placeholder="Ex: 6 meses"
+              editMode={editMode}
+              toggleEditMode={toggleEditMode}
+            />
+
+            <TouchableOpacity
+              style={styles.botaoSalvar}
+              onPress={atualizarConsulta}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color="#FFF" />
+              ) : (
+                <Text style={styles.botaoSalvarTexto}>Salvar</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
       </ScrollView>
 
       <Menu />
@@ -235,6 +298,20 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 15,
     marginBottom: 20,
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statusContainer: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   titulo: {
     fontSize: 16,
