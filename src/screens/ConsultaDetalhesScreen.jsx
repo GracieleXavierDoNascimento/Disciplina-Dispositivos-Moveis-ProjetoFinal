@@ -2,7 +2,6 @@ import { Feather } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -12,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import Menu from '../components/Menu';
+import { showErrorNotification, showSuccessNotification } from '../services/notificationService';
 
 const EditableField = ({
   label,
@@ -21,8 +21,19 @@ const EditableField = ({
   editMode,
   toggleEditMode,
   multiline = false,
-  placeholder
+  placeholder,
+  isFinalized = false
 }) => {
+  if (isFinalized) {
+    // Se a consulta está finalizada, apenas mostrar o texto
+    return (
+      <>
+        <Text style={styles.label}>{label}:</Text>
+        <Text style={styles.fieldText}>{value || 'Não informado'}</Text>
+      </>
+    );
+  }
+
   if (editMode[field]) {
     return (
       <>
@@ -95,15 +106,14 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
       );
 
       if (response.ok) {
-        Alert.alert('Sucesso', 'Consulta atualizada com sucesso!', [
-          { text: 'OK', onPress: () => navigation.goBack() }
-        ]);
+        showSuccessNotification('Consulta atualizada com sucesso!');
+        navigation.goBack();
       } else {
         throw new Error('Erro ao atualizar consulta');
       }
     } catch (error) {
       console.error('Erro ao atualizar consulta:', error);
-      Alert.alert('Erro', 'Não foi possível atualizar a consulta');
+      showErrorNotification('Não foi possível atualizar a consulta');
     } finally {
       setLoading(false);
     }
@@ -123,15 +133,14 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
       );
 
       if (response.ok) {
-        Alert.alert('Sucesso', 'Consulta deletada com sucesso!', [
-          { text: 'OK', onPress: () => navigation.goBack() }
-        ]);
+        showSuccessNotification('Consulta cancelada com sucesso!');
+        navigation.goBack();
       } else {
         throw new Error('Erro ao deletar consulta');
       }
     } catch (error) {
-      console.error('Erro ao deletar consulta:', error);
-      Alert.alert('Erro', 'Não foi possível deletar a consulta');
+      console.error('Erro ao cancelar consulta:', error);
+      showErrorNotification('Não foi possível cancelar a consulta');
     } finally {
       setLoading(false);
     }
@@ -194,7 +203,7 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
           <Text style={styles.texto}>{consulta.motivoConsulta || 'Não informado'}</Text>
 
           <View style={styles.botoes}>
-            {consulta.statusConsulta !== 3 ? (
+            {consulta.statusConsulta === 1 ? (
               <TouchableOpacity
                 style={styles.botaoCinza}
                 onPress={deletarConsulta}
@@ -219,6 +228,7 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
               placeholder="Digite aqui..."
               editMode={editMode}
               toggleEditMode={toggleEditMode}
+              isFinalized={consulta.statusConsulta === 2}
             />
 
             <EditableField
@@ -230,6 +240,7 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
               placeholder="Digite aqui..."
               editMode={editMode}
               toggleEditMode={toggleEditMode}
+              isFinalized={consulta.statusConsulta === 2}
             />
 
             <EditableField
@@ -241,6 +252,7 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
               placeholder="Digite aqui..."
               editMode={editMode}
               toggleEditMode={toggleEditMode}
+              isFinalized={consulta.statusConsulta === 2}
             />
 
             <EditableField
@@ -251,19 +263,22 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
               placeholder="Ex: 6 meses"
               editMode={editMode}
               toggleEditMode={toggleEditMode}
+              isFinalized={consulta.statusConsulta === 2}
             />
 
-            <TouchableOpacity
-              style={styles.botaoSalvar}
-              onPress={atualizarConsulta}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator size="small" color="#FFF" />
-              ) : (
-                <Text style={styles.botaoSalvarTexto}>Salvar</Text>
-              )}
-            </TouchableOpacity>
+            {consulta.statusConsulta !== 2 && (
+              <TouchableOpacity
+                style={styles.botaoSalvar}
+                onPress={atualizarConsulta}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator size="small" color="#FFF" />
+                ) : (
+                  <Text style={styles.botaoSalvarTexto}>Salvar</Text>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
         ) : null}
 

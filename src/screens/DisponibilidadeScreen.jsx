@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import Menu from '../components/Menu';
 import api from '../services/api';
+import { showErrorNotification, showSuccessNotification } from '../services/notificationService';
 
 // Data atual
 const hoje = new Date();
@@ -24,11 +25,12 @@ export default function DisponibilidadeScreen() {
   const [selectedDay, setSelectedDay] = useState(diaAtual);
   const [selectedMonth, setSelectedMonth] = useState(mesAtual);
   const [selectedYear, setSelectedYear] = useState(anoAtual);
-  const [selectedTime, setSelectedTime] = useState(null);
+  const [selectedTimes, setSelectedTimes] = useState([]); // Array para múltiplos horários
   const [patientName, setPatientName] = useState('');
   const [patientPhone, setPatientPhone] = useState('');
   const [monthOffset, setMonthOffset] = useState(0);
   const jwtDecode = require('jwt-decode').default || require('jwt-decode');
+
 
   const monthNames = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -52,40 +54,44 @@ export default function DisponibilidadeScreen() {
   ];
 
   const handleDaySelect = (day) => {
-    // console.log(day)
     setSelectedDay(day);
-    setSelectedTime(null); // limpa horário ao trocar o dia
+    setSelectedTimes([]); // limpa horários ao trocar o dia
   };
 
   const handleTimeSelect = (time) => {
-    setSelectedTime(time);
+    setSelectedTimes(prev => {
+      if (prev.includes(time)) {
+        // Remove o horário se já estiver selecionado
+        return prev.filter(t => t !== time);
+      } else {
+        // Adiciona o horário se não estiver selecionado
+        return [...prev, time];
+      }
+    });
   };
 
   const handleSave = () => {
-    if (!selectedDay || !selectedTime) return;
-
-
+    if (!selectedDay || selectedTimes.length === 0) {
+      showErrorNotification('Selecione um dia e pelo menos um horário');
+      return;
+    }
 
     const postDisponibilidade = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
-
-        console.log(token)
         const decoded = decodeJWTPayload(token);
-
-        // console.log("decodificado: ", decoded)
-
         const id = decoded.id || decoded.sub;
-        // console.log('ID extraído do token:', id);
 
         const response = await api.post(`/diasAtendimento/${id}`, buildRequestBody());
         if (response) {
-          console.log("Dia cadastrado com sucesso!");
+          showSuccessNotification('Horários cadastrados com sucesso!');
+          setSelectedTimes([]); // Limpa seleção após sucesso
         } else {
-          console.log("erro na tentativaa de cadastar o dia!")
+          showErrorNotification('Erro ao cadastrar os horários!');
         }
       } catch (error) {
         console.error('Erro:', error);
+        showErrorNotification('Erro ao cadastrar os horários!');
       }
     };
 
@@ -103,16 +109,17 @@ export default function DisponibilidadeScreen() {
     const mes = String(displayMonthIndex + 1).padStart(2, '0');
     const ano = String(displayYear);
 
-    const [hora, minuto = '00'] = selectedTime.split(':');
-    const horaFormatada = `${hora.padStart(2, '0')}:${minuto.padStart(2, '0')}:00`;
+    // Criar array de horários para todos os horários selecionados
+    const horarios = selectedTimes.map(time => {
+      const [hora, minuto = '00'] = time.split(':');
+      const horaFormatada = `${hora.padStart(2, '0')}:${minuto.padStart(2, '0')}:00`;
+      
+      return {
+        horario: `${ano}-${mes}-${dia} ${horaFormatada}`
+      };
+    });
 
-    return {
-      horarios: [
-        {
-          horario: `${ano}-${mes}-${dia} ${horaFormatada}`
-        }
-      ]
-    };
+    return { horarios };
   }
 
 
@@ -120,14 +127,14 @@ export default function DisponibilidadeScreen() {
   const handleConfirm = () => {
     console.log('Reserva:', {
       dia: selectedDay,
-      hora: selectedTime,
+      hora: selectedTimes,
       especialidade: selectedSpecialty,
       paciente: patientName,
       telefone: patientPhone,
     });
 
     setModalVisible(false);
-    alert('Horário agendado com sucesso!');
+    showSuccessNotification('Horário agendado com sucesso!');
     setPatientName('');
     setPatientPhone('');
     setSelectedSpecialty('');
@@ -189,7 +196,9 @@ export default function DisponibilidadeScreen() {
             ))}
           </View>
 
-          <Text style={styles.subtitle}>Horários disponíveis :</Text>
+          <Text style={styles.subtitle}>
+            Horários disponíveis ({selectedTimes.length} selecionado{selectedTimes.length !== 1 ? 's' : ''}):
+          </Text>
           <View style={styles.timesGrid}>
             {allTimes.map((time) => (
               <TouchableOpacity
@@ -197,18 +206,27 @@ export default function DisponibilidadeScreen() {
                 onPress={() => handleTimeSelect(time)}
                 style={[
                   styles.timeButton,
-                  selectedTime === time && styles.timeButtonSelected,
+                  selectedTimes.includes(time) && styles.timeButtonSelected,
                 ]}
               >
                 <Text style={{
-                  color: selectedTime === time ? '#fff' : '#4B0056',
+                  color: selectedTimes.includes(time) ? '#fff' : '#4B0056',
                 }}>{time}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-            <Text style={styles.saveBtnText}>Salvar</Text>
+          <TouchableOpacity 
+            style={[
+              styles.saveBtn,
+              (selectedTimes.length === 0) && styles.saveBtnDisabled
+            ]} 
+            onPress={handleSave}
+            disabled={selectedTimes.length === 0}
+          >
+            <Text style={styles.saveBtnText}>
+              Salvar {selectedTimes.length > 0 ? `(${selectedTimes.length} horário${selectedTimes.length !== 1 ? 's' : ''})` : ''}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -272,6 +290,9 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     color: '#fff', fontWeight: 'bold', fontSize: 16,
+  },
+  saveBtnDisabled: {
+    backgroundColor: '#B0B0B0',
   },
   modalOverlay: {
     flex: 1, justifyContent: 'center', alignItems: 'center',

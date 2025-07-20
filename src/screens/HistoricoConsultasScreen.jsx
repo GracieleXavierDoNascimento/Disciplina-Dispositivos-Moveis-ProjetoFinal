@@ -1,56 +1,110 @@
 // src/screens/HistoricoConsultasScreen.js
-import React, { useState } from 'react';
+import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import moment from 'moment';
+import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
+  FlatList,
   SafeAreaView,
   StyleSheet,
   Text,
-  View,
-  FlatList,
   TouchableOpacity,
+  View,
 } from 'react-native';
-import { Feather } from '@expo/vector-icons';
 import CalendarStrip from 'react-native-calendar-strip';
-import moment from 'moment';
+import { showErrorNotification } from '../services/notificationService';
 
 import Menu from '../components/Menu';
 
-const agendaData = {
-  '2025-07-14': [
-    {
-      horaInicio: '09:00',
-      horaFim: '09:30',
-      especialidade: 'Clínico Geral',
-      tipo: 'Particular',
-      paciente: 'Victor Araujo',
-    },
-  ],
-  '2025-07-13': [
-    {
-      horaInicio: '14:00',
-      horaFim: '14:30',
-      especialidade: 'Clínico Geral',
-      tipo: 'Convênio',
-      paciente: 'Natália Silva',
-    },
-  ],
-};
-
 export default function HistoricoConsultasScreen({ navigation }) {
-  const hoje = moment();
-  const [selectedDate, setSelectedDate] = useState(hoje.format('YYYY-MM-DD'));
+  const [selectedDate, setSelectedDate] = useState(moment().format('YYYY-MM-DD'));
+  const [consultas, setConsultas] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [dentistaId, setDentistaId] = useState(null);
 
-  const isPastDate = (date) => moment(date).isBefore(hoje, 'day');
+  // Função para extrair o ID do dentista do token
+  const getDentistaIdFromToken = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.id;
+      }
+    } catch (error) {
+      console.error('Erro ao extrair ID do token:', error);
+    }
+    return null;
+  };
 
-  const consultasDoDia = isPastDate(selectedDate)
-    ? agendaData[selectedDate] || []
-    : [];
+  // Função para buscar consultas da API
+  const fetchConsultas = async (date, dentistaId) => {
+    if (!dentistaId) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/consulta/agenda/${dentistaId}?data=${date}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+
+        // Filtrar apenas consultas com status = 2 (finalizadas) e mapear dados
+        const consultasFinalizadas = data
+          .filter(consulta => consulta.statusConsulta === 2)
+          .map(consulta => ({
+            id: consulta.id,
+            horaInicio: moment(consulta.dataConsulta).format('HH:mm'),
+            paciente: consulta.pacienteNome,
+            motivo: consulta.motivo,
+            procedimentosRealizados: consulta.procedimentosRealizados,
+            avaliacao: consulta.avaliacao,
+            recomendacoes: consulta.recomendacoes,
+            voltaEsperada: consulta.voltaEsperada,
+            statusConsulta: consulta.statusConsulta,
+          }));
+
+        setConsultas(consultasFinalizadas);
+      } else {
+        throw new Error('Erro ao buscar consultas');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar consultas:', error);
+      showErrorNotification('Não foi possível carregar as consultas');
+      setConsultas([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Inicializar o componente
+  useEffect(() => {
+    const initializeData = async () => {
+      const id = await getDentistaIdFromToken();
+      setDentistaId(id);
+      if (id) {
+        await fetchConsultas(selectedDate, id);
+      }
+    };
+
+    initializeData();
+  }, []);
+
+  // Buscar consultas quando a data for alterada
+  const handleDateSelect = async (date) => {
+    const newDate = date.format('YYYY-MM-DD');
+    setSelectedDate(newDate);
+    if (dentistaId) {
+      await fetchConsultas(newDate, dentistaId);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Histórico de Consultas</Text>
 
       <CalendarStrip
-        scrollable
         style={styles.calendar}
         calendarColor="#FAF3FB"
         calendarHeaderStyle={{ color: '#4B0056', fontWeight: '600' }}
@@ -63,23 +117,27 @@ export default function HistoricoConsultasScreen({ navigation }) {
           borderRadius: 16,
         }}
         selectedDate={moment(selectedDate)}
-        onDateSelected={(date) => setSelectedDate(date.format('YYYY-MM-DD'))}
+        onDateSelected={handleDateSelect}
         iconContainer={{ flex: 0.1 }}
       />
 
       <View style={styles.headerTabela}>
         <Text style={styles.colunaHora}>Hora</Text>
         <Text style={styles.colunaConsulta}>Consultas realizadas</Text>
-        <Feather name="clock" size={18} color="#4B0056" />
+        {loading ? (
+          <ActivityIndicator size="small" color="#4B0056" />
+        ) : (
+          <Feather name="clock" size={18} color="#4B0056" />
+        )}
       </View>
 
       <FlatList
-        data={consultasDoDia}
-        keyExtractor={(_, idx) => idx.toString()}
+        data={consultas}
+        keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
         contentContainerStyle={{ paddingBottom: 80 }}
         ListEmptyComponent={
           <Text style={styles.emptyText}>
-            Nenhuma consulta realizada nesse dia
+            {loading ? 'Carregando...' : 'Nenhuma consulta realizada nesse dia'}
           </Text>
         }
         renderItem={({ item }) => (
@@ -91,14 +149,15 @@ export default function HistoricoConsultasScreen({ navigation }) {
             <View style={styles.consulta}>
               <View style={styles.horario}>
                 <Text style={styles.horaTexto}>{item.horaInicio}</Text>
-                <Text style={styles.horaTextoCinza}>{item.horaFim}</Text>
               </View>
               <View style={styles.detalhesConsulta}>
-                <Text style={styles.consultaTitulo}>
-                  {item.especialidade}
-                </Text>
-                <Text style={styles.consultaTipo}>{item.tipo}</Text>
-                <Text style={styles.consultaPaciente}>{item.paciente}</Text>
+                <View>
+                  <Text style={styles.consultaPaciente}>{item.paciente}</Text>
+                  <Text style={styles.consultaMotivo}>{item.motivo || "Motivo não informado"}</Text>
+                </View>
+                <View style={styles.statusContainer}>
+                  <Text style={styles.statusText}>Finalizada</Text>
+                </View>
               </View>
             </View>
           </TouchableOpacity>
@@ -166,6 +225,8 @@ const styles = StyleSheet.create({
     color: '#999',
   },
   detalhesConsulta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     flex: 1,
     backgroundColor: '#fff',
     borderRadius: 15,
@@ -177,18 +238,28 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
   },
-  consultaTitulo: {
-    color: '#4B0056',
-    fontWeight: 'bold',
-    fontSize: 14,
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: 'rgba(40, 167, 69, 0.2)',
   },
-  consultaTipo: {
-    fontSize: 13,
-    color: '#666',
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#28a745',
   },
   consultaPaciente: {
     fontSize: 14,
     color: '#000',
+    fontWeight: 'bold',
+  },
+  consultaMotivo: {
+    fontSize: 13,
+    color: '#666',
     marginTop: 4,
   },
   emptyText: {

@@ -4,6 +4,7 @@ import {
     SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View
 } from 'react-native';
 import Menu from '../components/Menu';
+import { showErrorNotification } from '../services/notificationService';
 
 export default function MarcarConsultaScreen({ navigation }) {
   const hoje = new Date();
@@ -47,11 +48,11 @@ export default function MarcarConsultaScreen({ navigation }) {
 
   const handleAgendar = () => {
     if (!croDentista.trim()) {
-      alert('Por favor, informe o CRO do dentista.');
+      showErrorNotification('Por favor, informe o CRO do dentista.');
       return;
     }
     if (!selectedDay || !selectedTime || motivoConsulta.trim() === '') {
-      alert('Por favor, selecione data, horário e informe o motivo da consulta.');
+      showErrorNotification('Por favor, selecione data, horário e informe o motivo da consulta.');
       return;
     }
 

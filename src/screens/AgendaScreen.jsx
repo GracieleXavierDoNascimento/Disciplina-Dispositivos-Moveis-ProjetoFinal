@@ -5,7 +5,6 @@ import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   SafeAreaView,
   StyleSheet,
@@ -14,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import CalendarStrip from 'react-native-calendar-strip';
+import { showErrorNotification } from '../services/notificationService';
 
 import Menu from '../components/Menu';
 
@@ -73,7 +73,7 @@ export default function AgendaScreen({ navigation }) {
       }
     } catch (error) {
       console.error('Erro ao buscar consultas:', error);
-      Alert.alert('Erro', 'Não foi possível carregar as consultas');
+      showErrorNotification('Não foi possível carregar as consultas');
       setConsultas([]);
     } finally {
       setLoading(false);

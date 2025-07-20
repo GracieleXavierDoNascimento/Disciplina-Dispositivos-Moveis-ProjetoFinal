@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
+import { useState } from 'react';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { showErrorNotification } from '../services/notificationService';
 
 export default function NewPasswordScreen() {
   const [senha, setSenha] = useState('');
@@ -11,7 +12,7 @@ export default function NewPasswordScreen() {
       // TODO: salvar nova senha na API
       router.push('/login'); // ou '/home' se preferir ir direto
     } else {
-      alert('As senhas não coincidem ou são muito curtas.');
+      showErrorNotification('As senhas não coincidem ou são muito curtas.');
     }
   };
 

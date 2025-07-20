@@ -3,14 +3,14 @@ import axios from 'axios';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
-  Alert,
-  Dimensions,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Dimensions,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
+import { showErrorNotification } from '../services/notificationService';
 
 const { height } = Dimensions.get('window');
 
@@ -36,7 +36,7 @@ export default function LoginScreen({ navigation }) {
         } else if (tipoUsuario === 'ROLE_DENTISTA') {
           navigation.navigate('Agenda');
         } else {
-          Alert.alert("Tipo de usuario invalido!")
+          showErrorNotification("Tipo de usuario invalido!");
         }
       }).catch((error) => {
         if (error.response?.data?.errors) {
