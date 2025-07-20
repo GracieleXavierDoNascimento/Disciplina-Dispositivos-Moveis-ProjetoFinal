@@ -1,31 +1,53 @@
 import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CommonActions, useNavigation, useRoute } from '@react-navigation/native';
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
-const MENU_ITEMS = [
-  { key: 'home',     icon: 'home',     screen: 'Agenda' },
-  { key: 'favoritos',icon: 'calendar',    screen: 'Disponibilidade' }, // atualizado aqui
-  { key: 'agenda',   icon: 'rotate-ccw', screen: 'Historico' },
-  { key: 'perfil',   icon: 'user',     screen: 'Perfil' },
-];
+const MENU_ITEMS = {
+  ROLE_DENTISTA: [
+    { key: 'home', icon: 'home', screen: 'Agenda' },
+    { key: 'favoritos', icon: 'calendar', screen: 'Disponibilidade' },
+    { key: 'agenda', icon: 'rotate-ccw', screen: 'Historico' },
+    { key: 'perfil', icon: 'user', screen: 'Perfil' },
+  ],
+  ROLE_PACIENTE: [
+    { key: 'home', icon: 'home', screen: 'ConsultasAgendadasPaciente' },
+    { key: 'favoritos', icon: 'calendar', screen: 'MarcarConsulta' },
+    { key: 'agenda', icon: 'rotate-ccw', screen: 'HistConsultaPaciente' },
+    { key: 'perfil', icon: 'user', screen: 'Perfil' },
+  ],
+};
 
 function Menu() {
   const navigation = useNavigation();
   const route = useRoute();
   const current = route.name;
+  const [role, setRole] = useState(null);
+
+  useEffect(() => {
+    async function loadRole() {
+      try {
+        const storedRole = await AsyncStorage.getItem('tipoUsuario');
+        setRole(storedRole);
+      } catch (error) {
+        console.error('Erro ao carregar role:', error);
+      }
+    }
+    loadRole();
+  }, []);
 
   const handlePress = useCallback((screen) => {
     if (screen !== current) {
-      navigation.dispatch(
-        CommonActions.navigate({ name: screen })
-      );
+      navigation.dispatch(CommonActions.navigate({ name: screen }));
     }
   }, [current, navigation]);
 
+  const itemsToRender = MENU_ITEMS[role] || [];
+
   return (
     <View style={styles.menu}>
-      {MENU_ITEMS.map(item => {
+      {itemsToRender.map(item => {
         const isActive = current === item.screen;
         return (
           <TouchableOpacity

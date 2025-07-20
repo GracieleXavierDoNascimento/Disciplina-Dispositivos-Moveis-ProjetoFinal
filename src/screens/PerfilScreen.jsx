@@ -1,5 +1,7 @@
 import { Feather } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Buffer } from 'buffer';
+import React, { useEffect, useState } from 'react';
 import {
   Image,
   SafeAreaView,
@@ -9,27 +11,99 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import Menu from '../components/Menu'; // 1. importe o componente Menu
+import Menu from '../components/Menu';
+import api from '../services/api';
 
 export default function PerfilScreen({ navigation }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isAddressStep, setIsAddressStep] = useState(false); // para dentista etapa 2
 
-  //Dados em comum
-  const [nome, setNome] = useState();
-  const [email, setEmail] = useState();
-  const [telefone, setTelefone] = useState();
-  const [cro, setCro] = useState();
+  const [role, setRole] = useState(null); // para controlar role e renderizar diferente
 
-  //Endereço
-  const [rua, setRua] = useState();
-  const [cidade, setCidade] = useState();
-  const [bairro, setBairro] = useState();
-  const [numero, setNumero] = useState();
-  const [cep, setCep] = useState();
+  // Dados comuns
+  const [nome, setNome] = useState('');
+  const [email, setEmail] = useState('');
+  const [telefone, setTelefone] = useState('');
+  const [cro, setCro] = useState('');
+
+  // Endereço
+  const [rua, setRua] = useState('');
+  const [cidade, setCidade] = useState('');
+  const [bairro, setBairro] = useState('');
+  const [numero, setNumero] = useState('');
+  const [cep, setCep] = useState('');
+  const [complemento, setComplemento] = useState('');
+
+  // Função para decodificar token JWT
+  function decodeJWTPayload(token) {
+    if (!token || typeof token !== 'string' || !token.includes('.')) {
+      return null;
+    }
+    try {
+      const payload = token.split('.')[1];
+      const decodedPayload = Buffer.from(payload, 'base64').toString('utf8');
+      return JSON.parse(decodedPayload);
+    } catch (error) {
+      console.error("Erro ao decodificar token:", error);
+      return null;
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.clear();
+      navigation.navigate('Login');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+  };
+
+  useEffect(() => {
+    async function carregarDados() {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        const storedRole = await AsyncStorage.getItem('tipoUsuario');
+        setRole(storedRole);
+
+        if (!token) return;
+
+        const decoded = decodeJWTPayload(token);
+        const id = decoded?.id;
+        const tokenEmail = decoded?.sub;
+
+        if (storedRole === 'ROLE_DENTISTA' && id) {
+          const response = await api.get(`/dentista/${id}`);
+          const data = response.data;
+          setNome(data.nome || '');
+          setEmail(tokenEmail || '');
+          setTelefone(data.telefone || '');
+          setCro(data.cro || '');
+          setRua(data.rua || '');
+          setCidade(data.cidade || '');
+          setBairro(data.bairro || '');
+          setNumero(data.numero || '');
+          setCep(data.cep || '');
+          setComplemento(data.complemento || '');
+        } else if (storedRole === 'ROLE_PACIENTE' && id) {
+          const response = await api.get(`/paciente/${id}`);
+          const data = response.data;
+          setNome(data.nome || '');
+          setEmail(data.email || '');
+          setTelefone(data.telefone || '');
+          setCro('');
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dados do perfil:", error);
+      }
+    }
+    carregarDados();
+  }, []);
 
   const handleEditSave = () => {
     if (isEditing) {
+      // Aqui você pode enviar os dados atualizados para o backend via API
+
       setIsEditing(false);
       setIsSuccess(true);
       setTimeout(() => setIsSuccess(false), 3000);
@@ -38,22 +112,9 @@ export default function PerfilScreen({ navigation }) {
     }
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      {/* Botão de logout */}
-      <View style={styles.logoutContainer}>
-        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-          <Feather name="log-out" size={22} color="#4B0056" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Banner de sucesso */}
-      {isSuccess && (
-        <View style={styles.successBanner}>
-          <Text style={styles.successText}>Perfil atualizado com sucesso!</Text>
-        </View>
-      )}
-
+  // Render da tela principal (etapa 1)
+  const renderMainStep = () => {
+    return (
       <View style={styles.content}>
         <Text style={styles.header}>Informações pessoais</Text>
         <Text style={styles.saudacao}>Olá, {nome}</Text>
@@ -73,36 +134,60 @@ export default function PerfilScreen({ navigation }) {
             value={nome}
             onChangeText={setNome}
             editable={isEditing}
+            placeholder="Nome"
           />
           <TextInput
             style={styles.input}
             value={email}
             onChangeText={setEmail}
             editable={isEditing}
+            placeholder="Email"
+            keyboardType="email-address"
           />
           <TextInput
             style={styles.input}
             value={telefone}
             onChangeText={setTelefone}
             editable={isEditing}
-          />
-          <TextInput
-            style={styles.input}
-            value={cro}
-            onChangeText={setCro}
-            editable={isEditing}
-          />
-          <TextInput
-            style={styles.input}
-            value={endereco}
-            onChangeText={setEndereco}
-            editable={isEditing}
+            placeholder="Telefone"
+            keyboardType="phone-pad"
           />
 
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={handleEditSave}
-          >
+          {role === 'ROLE_DENTISTA' && (
+            <>
+              <TextInput
+                style={styles.input}
+                value={cro}
+                onChangeText={setCro}
+                editable={isEditing}
+                placeholder="CRO"
+              />
+              {/* Campo rua como botão que leva para editar endereço */}
+              <TouchableOpacity
+                disabled={!isEditing}
+                onPress={() => setIsAddressStep(true)}
+                style={[
+                  styles.input,
+                  { justifyContent: 'center', paddingVertical: 14 },
+                  !isEditing && { backgroundColor: '#eee' },
+                ]}
+              >
+                <Text style={{ color: rua ? '#000' : '#999' }}>
+                  {rua || 'Rua'}
+                </Text>
+                {isEditing && (
+                  <Feather
+                    name="edit-2"
+                    size={18}
+                    color="#4B0056"
+                    style={{ position: 'absolute', right: 10 }}
+                  />
+                )}
+              </TouchableOpacity>
+            </>
+          )}
+
+          <TouchableOpacity style={styles.editButton} onPress={handleEditSave}>
             <Feather
               name={isEditing ? 'check' : 'edit-2'}
               size={20}
@@ -111,8 +196,95 @@ export default function PerfilScreen({ navigation }) {
           </TouchableOpacity>
         </View>
       </View>
+    );
+  };
 
-     <Menu />    {/* 2. use o componente Menu */}
+  // Render da tela de edição de endereço (etapa 2)
+  const renderAddressStep = () => {
+    return (
+      <SafeAreaView style={styles.content}>
+        <TouchableOpacity
+          onPress={() => setIsAddressStep(false)}
+          style={{ marginBottom: 10 }}
+        >
+          <Feather name="arrow-left" size={24} color="#4B0056" />
+        </TouchableOpacity>
+
+        <Text style={styles.header}>Editar Endereço</Text>
+        <Text style={styles.saudacao}>Olá, {nome}</Text>
+
+        <View style={styles.card}>
+          <TextInput
+            style={styles.input}
+            value={rua}
+            onChangeText={setRua}
+            editable={isEditing}
+            placeholder="Rua"
+          />
+          <TextInput
+            style={styles.input}
+            value={cidade}
+            onChangeText={setCidade}
+            editable={isEditing}
+            placeholder="Cidade"
+          />
+          <TextInput
+            style={styles.input}
+            value={bairro}
+            onChangeText={setBairro}
+            editable={isEditing}
+            placeholder="Bairro"
+          />
+          <TextInput
+            style={styles.input}
+            value={numero}
+            onChangeText={setNumero}
+            editable={isEditing}
+            placeholder="Número"
+            keyboardType="numeric"
+          />
+          <TextInput
+            style={styles.input}
+            value={cep}
+            onChangeText={setCep}
+            editable={isEditing}
+            placeholder="CEP"
+            keyboardType="numeric"
+          />
+          <TextInput
+            style={styles.input}
+            value={complemento}
+            onChangeText={setComplemento}
+            editable={isEditing}
+            placeholder="Complemento"
+          />
+
+          <TouchableOpacity style={styles.editButton} onPress={handleEditSave}>
+            <Feather
+              name={isEditing ? 'check' : 'edit-2'}
+              size={20}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Botão de logout */}
+      <View style={styles.logoutContainer}>
+        <TouchableOpacity onPress={handleLogout}>
+          <Feather name="log-out" size={22} color="#4B0056" />
+        </TouchableOpacity>
+      </View>
+
+      {role === 'ROLE_DENTISTA' && isAddressStep
+        ? renderAddressStep()
+        : renderMainStep()}
+
+      <Menu />
     </SafeAreaView>
   );
 }
@@ -194,21 +366,5 @@ const styles = StyleSheet.create({
     bottom: -25,
     alignSelf: 'center',
     elevation: 5,
-  },
-  menu: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 60,
-    backgroundColor: '#FFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E6E6E6',
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-    elevation: 10,
   },
 });
