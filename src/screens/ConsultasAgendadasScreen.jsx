@@ -17,7 +17,7 @@ export default function ConsultasAgendadasScreen({ navigation }) {
         const decoded = JSON.parse(atob(token.split('.')[1]));
         const id = decoded.id;
 
-        const response = await api.get(`/consulta/${id}`);
+        const response = await api.get(`/consulta/usuario/${id}`);
         setConsultas(response.data || []);
       } catch (error) {
         console.error("Erro ao carregar consultas:", error);

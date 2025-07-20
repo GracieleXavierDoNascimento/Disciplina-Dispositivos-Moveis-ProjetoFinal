@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-    SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View
+  SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View
 } from 'react-native';
 import Menu from '../components/Menu';
 import { showErrorNotification } from '../services/notificationService';
@@ -70,7 +70,7 @@ export default function MarcarConsultaScreen({ navigation }) {
       motivo: motivoConsulta.trim(),
     };
 
-    navigation.navigate('HistoricoSucesso', { consulta: novaConsulta });
+    navigation.navigate('ConsultasAgendadasPaciente', { consulta: novaConsulta });
   };
 
   return (

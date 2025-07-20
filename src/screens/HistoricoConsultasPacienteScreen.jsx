@@ -22,7 +22,7 @@ export default function HistoricoConsultasPacienteScreen({ navigation }) {
         const decoded = JSON.parse(atob(token.split('.')[1]));
         const userId = decoded.id;
 
-        const response = await api.get(`/consulta/historico/${userId}`);
+        const response = await api.get(`/consulta/usuario/${userId}`);
         setConsultas(response.data || []);
       } catch (error) {
         console.error("Erro ao carregar histórico:", error);
@@ -40,7 +40,7 @@ export default function HistoricoConsultasPacienteScreen({ navigation }) {
       </View>
       <TouchableOpacity
         style={styles.botaoMais}
-        onPress={() => navigation.navigate('ConsultaDetalhada', { consulta: item })}
+        onPress={() => navigation.navigate('consultaDetalhePaciente', { consulta: item })}
       >
         <Feather name="plus" size={20} color="#4B0056" />
       </TouchableOpacity>

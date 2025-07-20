@@ -20,6 +20,7 @@ export default function PerfilScreen({ navigation }) {
   const [isAddressStep, setIsAddressStep] = useState(false); // para dentista etapa 2
 
   const [role, setRole] = useState(null); // para controlar role e renderizar diferente
+  const [userId, setUserId] = useState(null);
 
   // Dados comuns
   const [nome, setNome] = useState('');
@@ -72,6 +73,8 @@ export default function PerfilScreen({ navigation }) {
         const id = decoded?.id;
         const tokenEmail = decoded?.sub;
 
+        setUserId(id);
+
         if (storedRole === 'ROLE_DENTISTA' && id) {
           const response = await api.get(`/dentista/${id}`);
           const data = response.data;
@@ -86,10 +89,11 @@ export default function PerfilScreen({ navigation }) {
           setCep(data.cep || '');
           setComplemento(data.complemento || '');
         } else if (storedRole === 'ROLE_PACIENTE' && id) {
+          console.log(storedRole, id);
           const response = await api.get(`/paciente/${id}`);
           const data = response.data;
           setNome(data.nome || '');
-          setEmail(data.email || '');
+          setEmail(tokenEmail || '');
           setTelefone(data.telefone || '');
           setCro('');
         }
@@ -100,13 +104,41 @@ export default function PerfilScreen({ navigation }) {
     carregarDados();
   }, []);
 
-  const handleEditSave = () => {
+  const handleEditSave = async () => {
     if (isEditing) {
-      // Aqui você pode enviar os dados atualizados para o backend via API
 
-      setIsEditing(false);
-      setIsSuccess(true);
-      setTimeout(() => setIsSuccess(false), 3000);
+      if (role === 'ROLE_DENTISTA') {
+        await api.put(`/dentista/${userId}`, {
+          nome: nome,
+          email: email,
+          telefone: telefone,
+          cro: cro,
+          rua: rua,
+          cidade: cidade,
+          bairro: bairro,
+          numero: numero,
+          cep: cep,
+          complemento: complemento,
+        });
+
+        setIsEditing(false);
+        setIsSuccess(true);
+        setTimeout(() => setIsSuccess(false), 3000);
+
+      } else if (role === 'ROLE_PACIENTE') {
+        await api.put(`/paciente/${userId}`, {
+          nome,
+          email,
+          telefone,
+        });
+
+        setIsEditing(false);
+        setIsSuccess(true);
+        setTimeout(() => setIsSuccess(false), 3000);
+      }
+
+
+
     } else {
       setIsEditing(true);
     }
