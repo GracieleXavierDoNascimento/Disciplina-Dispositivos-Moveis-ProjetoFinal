@@ -75,7 +75,7 @@ export default function DisponibilidadeScreen() {
 
         // console.log("decodificado: ", decoded)
 
-        const id = decoded.id || decoded.sus;
+        const id = decoded.id || decoded.sub;
         // console.log('ID extraído do token:', id);
 
         const response = await api.post(`/diasAtendimento/${id}`, buildRequestBody());

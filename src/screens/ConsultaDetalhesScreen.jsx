@@ -1,23 +1,120 @@
-// src/screens/ConsultaDetalhesScreen.js
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  SafeAreaView,
-  TextInput,
-} from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import Menu from '../components/Menu';  // 1. importe o Menu
+import React, { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import Menu from '../components/Menu';
+
+// 🔧 Componente extraído para fora
+const EditableField = ({
+  label,
+  value,
+  onChangeText,
+  field,
+  editMode,
+  toggleEditMode,
+  multiline = false,
+  placeholder
+}) => {
+  if (editMode[field]) {
+    return (
+      <>
+        <Text style={styles.label}>{label}:</Text>
+        <TextInput
+          style={styles.input}
+          placeholder={placeholder}
+          multiline={multiline}
+          value={value}
+          onChangeText={onChangeText}
+        />
+      </>
+    );
+  } else {
+    return (
+      <>
+        <View style={styles.fieldHeader}>
+          <Text style={styles.label}>{label}:</Text>
+          <TouchableOpacity onPress={() => toggleEditMode(field)}>
+            <Feather name="edit-2" size={16} color="#4B0056" />
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.fieldText}>{value || 'Não informado'}</Text>
+      </>
+    );
+  }
+};
 
 export default function ConsultaDetalhesScreen({ route, navigation }) {
   const { consulta } = route.params;
 
+  console.log('Consulta recebida:', consulta);
+
+  const [avaliacao, setAvaliacao] = useState(consulta.avaliacao || '');
+  const [procedimentosRealizados, setProcedimentosRealizados] = useState(consulta.procedimentosRealizados || '');
+  const [recomendacoes, setRecomendacoes] = useState(consulta.recomendacoes || '');
+  const [voltaEsperada, setVoltaEsperada] = useState(consulta.voltaEsperada || '');
+  const [loading, setLoading] = useState(false);
+
+  const [editMode, setEditMode] = useState({
+    avaliacao: consulta.avaliacao === null || consulta.avaliacao === '',
+    procedimentosRealizados: consulta.procedimentosRealizados === null || consulta.procedimentosRealizados === '',
+    recomendacoes: consulta.recomendacoes === null || consulta.recomendacoes === '',
+    voltaEsperada: consulta.voltaEsperada === null || consulta.voltaEsperada === '',
+  });
+
+  const toggleEditMode = (field) => {
+    setEditMode(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
+  };
+
+  const atualizarConsulta = async () => {
+    setLoading(true);
+    try {
+      const requestBody = {
+        avaliacao,
+        procedimentosRealizados,
+        recomendacoes,
+        voltaEsperada
+      };
+
+      const response = await fetch(
+        `http://localhost:8080/api/consulta/${consulta.id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+
+      if (response.ok) {
+        Alert.alert('Sucesso', 'Consulta atualizada com sucesso!', [
+          { text: 'OK', onPress: () => navigation.goBack() }
+        ]);
+      } else {
+        throw new Error('Erro ao atualizar consulta');
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar consulta:', error);
+      Alert.alert('Erro', 'Não foi possível atualizar a consulta');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Botão Voltar */}
       <TouchableOpacity
         onPress={() => navigation.goBack()}
         style={styles.botaoVoltar}
@@ -34,22 +131,17 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
           <Text style={styles.texto}>{consulta.paciente}</Text>
 
           <Text style={styles.label}>Horário:</Text>
-          <Text style={styles.texto}>
-            {consulta.horaInicio} - {consulta.horaFim}
-          </Text>
+          <Text style={styles.texto}>{consulta.horaInicio}</Text>
 
           <Text style={styles.label}>Especialidade:</Text>
           <Text style={styles.texto}>{consulta.especialidade}</Text>
 
           <Text style={styles.label}>Motivo da consulta:</Text>
-          <Text style={styles.texto}>Consulta normal de rotina</Text>
+          <Text style={styles.texto}>{consulta.motivoConsulta || 'Não informado'}</Text>
 
           <View style={styles.botoes}>
             <TouchableOpacity style={styles.botaoCinza}>
               <Text style={styles.botaoTextoCinza}>Cancelar consulta</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.botaoRoxo}>
-              <Text style={styles.botaoTextoRoxo}>Informações</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -57,40 +149,64 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
         <View style={styles.box}>
           <Text style={styles.titulo}>Informações de consulta</Text>
 
-          <Text style={styles.label}>Avaliação:</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Digite aqui..."
+          <EditableField
+            label="Avaliação"
+            value={avaliacao}
+            onChangeText={setAvaliacao}
+            field="avaliacao"
             multiline
+            placeholder="Digite aqui..."
+            editMode={editMode}
+            toggleEditMode={toggleEditMode}
           />
 
-          <Text style={styles.label}>Procedimentos realizados:</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Digite aqui..."
+          <EditableField
+            label="Procedimentos realizados"
+            value={procedimentosRealizados}
+            onChangeText={setProcedimentosRealizados}
+            field="procedimentosRealizados"
             multiline
+            placeholder="Digite aqui..."
+            editMode={editMode}
+            toggleEditMode={toggleEditMode}
           />
 
-          <Text style={styles.label}>Recomendações:</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Digite aqui..."
+          <EditableField
+            label="Recomendações"
+            value={recomendacoes}
+            onChangeText={setRecomendacoes}
+            field="recomendacoes"
             multiline
+            placeholder="Digite aqui..."
+            editMode={editMode}
+            toggleEditMode={toggleEditMode}
           />
 
-          <Text style={styles.label}>Volta esperada:</Text>
-          <TextInput
-            style={styles.input}
+          <EditableField
+            label="Volta esperada"
+            value={voltaEsperada}
+            onChangeText={setVoltaEsperada}
+            field="voltaEsperada"
             placeholder="Ex: 6 meses"
+            editMode={editMode}
+            toggleEditMode={toggleEditMode}
           />
 
-          <TouchableOpacity style={styles.botaoSalvar}>
-            <Text style={styles.botaoSalvarTexto}>Salvar</Text>
+          <TouchableOpacity
+            style={styles.botaoSalvar}
+            onPress={atualizarConsulta}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#FFF" />
+            ) : (
+              <Text style={styles.botaoSalvarTexto}>Salvar</Text>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>
 
-      <Menu />  {/* 2. substitua o menu interno pelo componente Menu */}
+      <Menu />
     </SafeAreaView>
   );
 }
@@ -146,7 +262,7 @@ const styles = StyleSheet.create({
   },
   botoes: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
     marginTop: 15,
   },
   botaoCinza: {
@@ -159,15 +275,20 @@ const styles = StyleSheet.create({
     color: '#4B0056',
     fontWeight: '500',
   },
-  botaoRoxo: {
-    backgroundColor: '#4B0056',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 10,
+  fieldHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
   },
-  botaoTextoRoxo: {
-    color: '#FFF',
-    fontWeight: '500',
+  fieldText: {
+    fontSize: 14,
+    color: '#333',
+    backgroundColor: '#F5F5F5',
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 5,
+    minHeight: 40,
   },
   botaoSalvar: {
     backgroundColor: '#4B0056',

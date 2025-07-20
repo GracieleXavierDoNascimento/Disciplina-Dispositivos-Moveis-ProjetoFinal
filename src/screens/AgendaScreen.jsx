@@ -1,8 +1,11 @@
 // src/screens/AgendaScreen.js
 import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
   FlatList,
   SafeAreaView,
   StyleSheet,
@@ -12,47 +15,97 @@ import {
 } from 'react-native';
 import CalendarStrip from 'react-native-calendar-strip';
 
-import Menu from '../components/Menu'; // 1. importe o componente Menu
-
-const agendaData = {
-  '2025-07-15': [
-    {
-      horaInicio: '09:00',
-      horaFim: '09:30',
-      especialidade: 'Clínico Geral',
-      tipo: 'Particular',
-      paciente: 'Victor Araujo',
-    },
-    {
-      horaInicio: '14:00',
-      horaFim: '14:30',
-      especialidade: 'Clínico Geral',
-      tipo: 'Convênio',
-      paciente: 'Natália Silva',
-    },
-  ],
-  '2025-07-16': [
-    {
-      horaInicio: '11:00',
-      horaFim: '11:30',
-      especialidade: 'Clínico Geral',
-      tipo: 'Convênio',
-      paciente: 'Hugo Pontes',
-    },
-  ],
-};
+import Menu from '../components/Menu';
 
 export default function AgendaScreen({ navigation }) {
   const [selectedDate, setSelectedDate] = useState(
     moment().format('YYYY-MM-DD')
   );
+  const [consultas, setConsultas] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [dentistaId, setDentistaId] = useState(null);
+
+  // Função para extrair o ID do dentista do token
+  const getDentistaIdFromToken = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        // Decodificar o JWT (assumindo que é um JWT padrão)
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.id;
+      }
+    } catch (error) {
+      console.error('Erro ao extrair ID do token:', error);
+    }
+    return null;
+  };
+
+  // Função para buscar consultas da API
+  const fetchConsultas = async (date, dentistaId) => {
+    if (!dentistaId) return;
+
+    setLoading(true);
+    try {
+      // Usar a data no formato YYYY-MM-DD como recebida
+      const response = await fetch(
+        `http://localhost:8080/api/consulta/agenda/${dentistaId}?data=${date}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Mapear dados da API para a estrutura esperada
+        const consultasFormatadas = data.map(consulta => ({
+          id: consulta.id,
+          horaInicio: moment(consulta.dataConsulta).format('HH:mm'),
+          paciente: consulta.pacienteNome,
+          motivo: consulta.motivo,
+          procedimentosRealizados: consulta.procedimentosRealizados,
+          avaliacao: consulta.avaliacao,
+          recomendacoes: consulta.recomendacoes,
+          voltaEsperada: consulta.voltaEsperada,
+        }));
+
+        setConsultas(consultasFormatadas);
+      } else {
+        throw new Error('Erro ao buscar consultas');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar consultas:', error);
+      Alert.alert('Erro', 'Não foi possível carregar as consultas');
+      setConsultas([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Inicializar o componente
+  useEffect(() => {
+    const initializeData = async () => {
+      const id = await getDentistaIdFromToken();
+      setDentistaId(id);
+      if (id) {
+        await fetchConsultas(selectedDate, id);
+      }
+    };
+
+    initializeData();
+  }, []);
+
+  // Buscar consultas quando a data for alterada
+  const handleDateSelect = async (date) => {
+    const newDate = date.format('YYYY-MM-DD');
+    setSelectedDate(newDate);
+    if (dentistaId) {
+      await fetchConsultas(newDate, dentistaId);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Agenda</Text>
 
       <CalendarStrip
-        scrollable
         style={styles.calendar}
         calendarColor="#FAF3FB"
         calendarHeaderStyle={{ color: '#4B0056', fontWeight: '600' }}
@@ -65,24 +118,28 @@ export default function AgendaScreen({ navigation }) {
           borderRadius: 16,
         }}
         selectedDate={moment(selectedDate)}
-        onDateSelected={(date) =>
-          setSelectedDate(date.format('YYYY-MM-DD'))
-        }
+        onDateSelected={handleDateSelect}
         iconContainer={{ flex: 0.1 }}
       />
 
       <View style={styles.headerTabela}>
         <Text style={styles.colunaHora}>Hora</Text>
         <Text style={styles.colunaConsulta}>Consultas agendadas</Text>
-        <Feather name="list" size={18} color="#4B0056" />
+        {loading ? (
+          <ActivityIndicator size="small" color="#4B0056" />
+        ) : (
+          <Feather name="list" size={18} color="#4B0056" />
+        )}
       </View>
 
       <FlatList
-        data={agendaData[selectedDate] || []}
-        keyExtractor={(_, idx) => idx.toString()}
+        data={consultas}
+        keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
         contentContainerStyle={{ paddingBottom: 80 }}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>Nenhuma consulta</Text>
+          <Text style={styles.emptyText}>
+            {loading ? 'Carregando...' : 'Nenhuma consulta'}
+          </Text>
         }
         renderItem={({ item }) => (
           <TouchableOpacity
@@ -93,25 +150,22 @@ export default function AgendaScreen({ navigation }) {
             <View style={styles.consulta}>
               <View style={styles.horario}>
                 <Text style={styles.horaTexto}>{item.horaInicio}</Text>
-                <Text style={styles.horaTextoCinza}>{item.horaFim}</Text>
               </View>
               <View style={styles.detalhesConsulta}>
-                <Text style={styles.consultaTitulo}>
-                  {item.especialidade}
-                </Text>
-                <Text style={styles.consultaTipo}>{item.tipo}</Text>
                 <Text style={styles.consultaPaciente}>{item.paciente}</Text>
+                <Text style={styles.consultaMotivo}>{item.motivo}</Text>
               </View>
             </View>
           </TouchableOpacity>
         )}
       />
 
-      <Menu />    {/* 2. use o componente Menu */}
+      <Menu />
     </SafeAreaView>
   );
 }
 
+// ...existing code... (styles permanecem os mesmos)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -163,10 +217,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000',
   },
-  horaTextoCinza: {
-    fontSize: 12,
-    color: '#999',
-  },
   detalhesConsulta: {
     flex: 1,
     backgroundColor: '#fff',
@@ -179,18 +229,14 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
   },
-  consultaTitulo: {
-    color: '#4B0056',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  consultaTipo: {
-    fontSize: 13,
-    color: '#666',
-  },
   consultaPaciente: {
     fontSize: 14,
     color: '#000',
+    fontWeight: 'bold',
+  },
+  consultaMotivo: {
+    fontSize: 13,
+    color: '#666',
     marginTop: 4,
   },
   emptyText: {
