@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
@@ -10,7 +11,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import api from '../services/api';
 
 const { height } = Dimensions.get('window');
 
@@ -19,7 +19,7 @@ export default function LoginScreen({ navigation }) {
   const [senha, setSenha] = useState('');
 
   const Login = () => {
-    api.post('/auth', {
+    axios.post('http://localhost:8080/api/auth', {
       email,
       senha
     })
@@ -32,7 +32,7 @@ export default function LoginScreen({ navigation }) {
         await AsyncStorage.setItem('tipoUsuario', tipoUsuario);
 
         if (tipoUsuario === 'ROLE_PACIENTE') {
-          navigation.navigate('Login');
+          navigation.navigate('ConsultasAgendadasPaciente');
         } else if (tipoUsuario === 'ROLE_DENTISTA') {
           navigation.navigate('Agenda');
         } else {

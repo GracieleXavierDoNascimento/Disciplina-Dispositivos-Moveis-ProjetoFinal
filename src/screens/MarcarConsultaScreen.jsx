@@ -1,165 +1,100 @@
 import { Feather } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Buffer } from 'buffer';
 import React, { useState } from 'react';
 import {
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View
 } from 'react-native';
 import Menu from '../components/Menu';
-import api from '../services/api';
 
-// Data atual
-const hoje = new Date();
-
-const diaAtual = hoje.getDate();
-const mesAtual = hoje.getMonth();
-const anoAtual = hoje.getFullYear();
-
-export default function DisponibilidadeScreen() {
-  const [selectedDay, setSelectedDay] = useState(diaAtual);
-  const [selectedMonth, setSelectedMonth] = useState(mesAtual);
-  const [selectedYear, setSelectedYear] = useState(anoAtual);
-  const [selectedTime, setSelectedTime] = useState(null);
-  const [patientName, setPatientName] = useState('');
-  const [patientPhone, setPatientPhone] = useState('');
+export default function MarcarConsultaScreen({ navigation }) {
+  const hoje = new Date();
+  const [croDentista, setCroDentista] = useState('');
+  const [selectedDay, setSelectedDay] = useState(null);
   const [monthOffset, setMonthOffset] = useState(0);
-  const jwtDecode = require('jwt-decode').default || require('jwt-decode');
+  const [selectedTime, setSelectedTime] = useState(null);
+  const [motivoConsulta, setMotivoConsulta] = useState('');
 
-  const monthNames = [
-    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
-  ];
-
-  const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+  const mesAtual = hoje.getMonth();
+  const anoAtual = hoje.getFullYear();
 
   const displayMonthIndex = (mesAtual + monthOffset + 12) % 12;
-  const displayMonthName = monthNames[displayMonthIndex];
   const displayYear = anoAtual + Math.floor((mesAtual + monthOffset) / 12);
+
+  const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+  const allTimes = ['08:00', '09:00', '10:00', '14:00', '15:00', '16:00'];
 
   const daysInMonth = new Date(displayYear, displayMonthIndex + 1, 0).getDate();
   const daysOfMonth = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
-
-  const allTimes = [
-    '8:00', '9:00', '11:00',
-    '12:00', '14:00', '15:00',
-    '17:00', '18:00', '19:00',
-  ];
-
   const handleDaySelect = (day) => {
-    // console.log(day)
     setSelectedDay(day);
-    setSelectedTime(null); // limpa horário ao trocar o dia
+    setSelectedTime(null);
   };
 
-  const handleTimeSelect = (time) => {
-    setSelectedTime(time);
-  };
-
-  const handleSave = () => {
-    if (!selectedDay || !selectedTime) return;
-
-
-
-    const postDisponibilidade = async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-
-        console.log(token)
-        const decoded = decodeJWTPayload(token);
-
-        // console.log("decodificado: ", decoded)
-
-        const id = decoded.id || decoded.sub;
-        // console.log('ID extraído do token:', id);
-
-        const response = await api.post(`/diasAtendimento/${id}`, buildRequestBody());
-        if (response) {
-          console.log("Dia cadastrado com sucesso!");
-        } else {
-          console.log("erro na tentativaa de cadastar o dia!")
-        }
-      } catch (error) {
-        console.error('Erro:', error);
-      }
-    };
-
-    postDisponibilidade();
-  };
-
-  function decodeJWTPayload(token) {
-    const payload = token.split('.')[1];
-    const decodedPayload = Buffer.from(payload, 'base64').toString('utf8');
-    return JSON.parse(decodedPayload);
-  }
-
-  function buildRequestBody() {
-    const dia = String(selectedDay).padStart(2, '0');
-    const mes = String(displayMonthIndex + 1).padStart(2, '0');
-    const ano = String(displayYear);
-
-    const [hora, minuto = '00'] = selectedTime.split(':');
-    const horaFormatada = `${hora.padStart(2, '0')}:${minuto.padStart(2, '0')}:00`;
-
-    return {
-      horarios: [
-        {
-          horario: `${ano}-${mes}-${dia} ${horaFormatada}`
-        }
-      ]
-    };
-  }
-
-
-
-  const handleConfirm = () => {
-    console.log('Reserva:', {
-      dia: selectedDay,
-      hora: selectedTime,
-      especialidade: selectedSpecialty,
-      paciente: patientName,
-      telefone: patientPhone,
-    });
-
-    setModalVisible(false);
-    alert('Horário agendado com sucesso!');
-    setPatientName('');
-    setPatientPhone('');
-    setSelectedSpecialty('');
-  };
+  const handleTimeSelect = (time) => setSelectedTime(time);
 
   const handlePrevMonth = () => {
     setMonthOffset((offset) => offset - 1);
-    setSelectedMonth(monthOffset);
     setSelectedDay(null);
     setSelectedTime(null);
   };
 
   const handleNextMonth = () => {
     setMonthOffset((offset) => offset + 1);
-    setSelectedMonth(monthOffset);
     setSelectedDay(null);
     setSelectedTime(null);
+  };
+
+  const handleAgendar = () => {
+    if (!croDentista.trim()) {
+      alert('Por favor, informe o CRO do dentista.');
+      return;
+    }
+    if (!selectedDay || !selectedTime || motivoConsulta.trim() === '') {
+      alert('Por favor, selecione data, horário e informe o motivo da consulta.');
+      return;
+    }
+
+    const dia = String(selectedDay).padStart(2, '0');
+    const mes = String(displayMonthIndex + 1).padStart(2, '0');
+    const ano = String(displayYear);
+
+    const novaConsulta = {
+      data: `${dia}/${mes}/${ano}`,
+      hora: selectedTime,
+      croDentista: croDentista.trim(),
+      nomeDentista: 'Dr. Taliana Carvalho',
+      especialidade: 'Ortodontista',
+      local: 'Jaboatão dos Guararapes/PE',
+      motivo: motivoConsulta.trim(),
+    };
+
+    navigation.navigate('HistoricoSucesso', { consulta: novaConsulta });
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.inner}>
-        <Text style={styles.title}>Marcar dias disponíveis</Text>
+        <Text style={styles.title}>Marcar consulta</Text>
 
         <View style={styles.card}>
-          <Text style={styles.subtitle}>Selecione os dias disponíveis:</Text>
+
+          {/* Campo para CRO do dentista */}
+          <Text style={styles.subtitle}>CRO do Dentista:</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Digite o CRO do dentista"
+            value={croDentista}
+            onChangeText={setCroDentista}
+          />
+
+          <Text style={styles.subtitle}>Selecione uma data:</Text>
 
           <View style={styles.calendarHeader}>
             <TouchableOpacity onPress={handlePrevMonth}>
               <Feather name="chevron-left" size={24} color="#4B0056" />
             </TouchableOpacity>
-            <Text style={styles.monthText}>{displayMonthName}</Text>
+            <Text style={styles.monthText}>{monthNames[displayMonthIndex]} {displayYear}</Text>
             <TouchableOpacity onPress={handleNextMonth}>
               <Feather name="chevron-right" size={24} color="#4B0056" />
             </TouchableOpacity>
@@ -189,7 +124,7 @@ export default function DisponibilidadeScreen() {
             ))}
           </View>
 
-          <Text style={styles.subtitle}>Horários disponíveis :</Text>
+          <Text style={styles.subtitle}>Horários disponíveis:</Text>
           <View style={styles.timesGrid}>
             {allTimes.map((time) => (
               <TouchableOpacity
@@ -207,8 +142,18 @@ export default function DisponibilidadeScreen() {
             ))}
           </View>
 
-          <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-            <Text style={styles.saveBtnText}>Salvar</Text>
+          <Text style={styles.subtitle}>Motivo da consulta:</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Descreva brevemente o motivo da consulta"
+            value={motivoConsulta}
+            onChangeText={setMotivoConsulta}
+            multiline
+            numberOfLines={4}
+          />
+
+          <TouchableOpacity style={styles.saveBtn} onPress={handleAgendar}>
+            <Text style={styles.saveBtnText}>Marcar Consulta</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -263,8 +208,14 @@ const styles = StyleSheet.create({
   },
   timeButtonSelected: { backgroundColor: '#4B0056' },
   input: {
-    backgroundColor: '#fff', borderColor: '#B38CB4',
-    borderWidth: 1, borderRadius: 10, padding: 10, marginBottom: 10,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#B38CB4',
+    padding: 10,
+    marginTop: 6,
+    minHeight: 40,
+    color: '#4B0056',
   },
   saveBtn: {
     backgroundColor: '#4B0056', paddingVertical: 12,
@@ -272,13 +223,5 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     color: '#fff', fontWeight: 'bold', fontSize: 16,
-  },
-  modalOverlay: {
-    flex: 1, justifyContent: 'center', alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modalContent: {
-    width: '85%', backgroundColor: '#fff',
-    borderRadius: 20, padding: 20,
   },
 });
