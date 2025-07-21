@@ -85,13 +85,12 @@ export default function DisponibilidadeScreen() {
         const response = await api.post(`/diasAtendimento/${id}`, buildRequestBody());
         if (response) {
           showSuccessNotification('Horários cadastrados com sucesso!');
-          setSelectedTimes([]); // Limpa seleção após sucesso
+          setSelectedTimes([]);
         } else {
           showErrorNotification('Erro ao cadastrar os horários!');
         }
       } catch (error) {
-        console.error('Erro:', error);
-        showErrorNotification('Erro ao cadastrar os horários!');
+        showErrorNotification(error.response.data.message || 'Erro ao cadastrar os horários!');
       }
     };
 

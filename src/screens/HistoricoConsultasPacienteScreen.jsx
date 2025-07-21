@@ -23,7 +23,8 @@ export default function HistoricoConsultasPacienteScreen({ navigation }) {
         const userId = decoded.id;
 
         const response = await api.get(`/consulta/usuario/${userId}`);
-        setConsultas(response.data || []);
+        const consultasHistorico = response.data?.filter(consulta => consulta.statusConsulta === 2 || consulta.statusConsulta === 3) || [];
+        setConsultas(consultasHistorico.reverse());
       } catch (error) {
         console.error("Erro ao carregar histórico:", error);
       }
@@ -32,17 +33,46 @@ export default function HistoricoConsultasPacienteScreen({ navigation }) {
     carregarHistorico();
   }, []);
 
+  const formatarData = (dataString) => {
+    const data = dataString.slice(0, 10); // yyyy-MM-dd
+    const [ano, mes, dia] = data.split('-');
+    return `${dia}-${mes}-${ano}`;
+  };
+  
+
   const renderItem = ({ item }) => (
     <View style={styles.consultaItem}>
-      <View>
-        <Text style={styles.data}>{item.data} às {item.hora}</Text>
-        <Text style={styles.nome}>{item.nomeDentista}</Text>
+      <View style={{ flex: 1 }}>
+        <View style={styles.headerCard}>
+          <Text style={styles.data}>Data: {formatarData(item.dataConsulta)}</Text>
+          <View style={[
+            styles.statusContainer,
+            {
+              backgroundColor: item.statusConsulta === 2
+                ? 'rgba(40, 167, 69, 0.2)' // Verde com transparência
+                : 'rgba(220, 53, 69, 0.2)' // Vermelho com transparência
+            }
+          ]}>
+            <Text style={[
+              styles.statusText,
+              {
+                color: item.statusConsulta === 2
+                  ? '#28a745' // Verde
+                  : '#dc3545' // Vermelho
+              }
+            ]}>
+              {item.statusConsulta === 2 ? "Finalizada" : "Cancelada"}
+            </Text>
+          </View>
+        </View>
+        <Text style={styles.data}>Horário: {item.dataConsulta.slice(11,16)}</Text>
+        <Text style={styles.nome}>Dentista: {item.dentistaNome}</Text>
       </View>
       <TouchableOpacity
-        style={styles.botaoMais}
-        onPress={() => navigation.navigate('consultaDetalhePaciente', { consulta: item })}
+        style={styles.botaoDetalhes}
+        onPress={() => navigation.navigate('DetalhesConsulta', { consulta: item })}
       >
-        <Feather name="plus" size={20} color="#4B0056" />
+        <Feather name="chevron-right" size={20} color="#4B0056" />
       </TouchableOpacity>
     </View>
   );
@@ -98,9 +128,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
   },
-  botaoMais: {
+  headerCard: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    gap: 20,
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  statusContainer: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  botaoDetalhes: {
     backgroundColor: '#FFD5EC',
     borderRadius: 20,
-    padding: 10,
+    padding: 8,
   },
 });

@@ -50,14 +50,15 @@ export default function HistoricoConsultasScreen({ navigation }) {
       if (response.ok) {
         const data = await response.json();
 
-        // Filtrar apenas consultas com status = 2 (finalizadas) e mapear dados
-        const consultasFinalizadas = data
-          .filter(consulta => consulta.statusConsulta === 2)
+        // Filtrar apenas consultas com status = 2 (finalizadas) ou 3 (canceladas) e mapear dados
+        const consultasHistorico = data
+          .filter(consulta => consulta.statusConsulta === 2 || consulta.statusConsulta === 3)
           .map(consulta => ({
             id: consulta.id,
-            horaInicio: moment(consulta.dataConsulta).format('HH:mm'),
+            horaConsulta: moment(consulta.dataConsulta).format('HH:mm'),
+            dataConsulta: consulta.dataConsulta,
             paciente: consulta.pacienteNome,
-            motivo: consulta.motivo,
+            motivo: consulta.motivoConsulta,
             procedimentosRealizados: consulta.procedimentosRealizados,
             avaliacao: consulta.avaliacao,
             recomendacoes: consulta.recomendacoes,
@@ -65,7 +66,7 @@ export default function HistoricoConsultasScreen({ navigation }) {
             statusConsulta: consulta.statusConsulta,
           }));
 
-        setConsultas(consultasFinalizadas);
+        setConsultas(consultasHistorico.reverse());
       } else {
         throw new Error('Erro ao buscar consultas');
       }
@@ -148,15 +149,31 @@ export default function HistoricoConsultasScreen({ navigation }) {
           >
             <View style={styles.consulta}>
               <View style={styles.horario}>
-                <Text style={styles.horaTexto}>{item.horaInicio}</Text>
+                <Text style={styles.horaTexto}>{item.horaConsulta}</Text>
               </View>
               <View style={styles.detalhesConsulta}>
                 <View>
                   <Text style={styles.consultaPaciente}>{item.paciente}</Text>
                   <Text style={styles.consultaMotivo}>{item.motivo || "Motivo não informado"}</Text>
                 </View>
-                <View style={styles.statusContainer}>
-                  <Text style={styles.statusText}>Finalizada</Text>
+                <View style={[
+                  styles.statusContainer,
+                  {
+                    backgroundColor: item.statusConsulta === 2
+                      ? 'rgba(40, 167, 69, 0.2)' // Verde com transparência
+                      : 'rgba(220, 53, 69, 0.2)' // Vermelho com transparência
+                  }
+                ]}>
+                  <Text style={[
+                    styles.statusText,
+                    {
+                      color: item.statusConsulta === 2
+                        ? '#28a745' // Verde
+                        : '#dc3545' // Vermelho
+                    }
+                  ]}>
+                    {item.statusConsulta === 2 ? "Finalizada" : "Cancelada"}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -245,12 +262,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: 'rgba(40, 167, 69, 0.2)',
   },
   statusText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#28a745',
   },
   consultaPaciente: {
     fontSize: 14,

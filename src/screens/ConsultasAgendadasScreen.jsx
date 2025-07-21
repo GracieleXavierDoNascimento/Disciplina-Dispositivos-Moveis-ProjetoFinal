@@ -18,7 +18,8 @@ export default function ConsultasAgendadasScreen({ navigation }) {
         const id = decoded.id;
 
         const response = await api.get(`/consulta/usuario/${id}`);
-        setConsultas(response.data || []);
+        const consultasAgendadas = response.data?.filter(consulta => consulta.statusConsulta === 1) || [];
+        setConsultas(consultasAgendadas);
       } catch (error) {
         console.error("Erro ao carregar consultas:", error);
       }
@@ -27,12 +28,19 @@ export default function ConsultasAgendadasScreen({ navigation }) {
     fetchConsultas();
   }, []);
 
+  const formatarData = (dataString) => {
+    const data = dataString.slice(0, 10); // yyyy-MM-dd
+    const [ano, mes, dia] = data.split('-');
+    return `${dia}-${mes}-${ano}`;
+  };
+  
+
   const renderItem = ({ item }) => (
     <View style={styles.consultaItem}>
       <View style={{ flex: 1 }}>
-        <Text style={styles.data}>{item.data} às {item.hora}</Text>
-        <Text style={styles.nome}>{item.nomeDentista}</Text>
-        <Text style={styles.especialidade}>{item.especialidade}</Text>
+        <Text style={styles.data}>Data: {formatarData(item.dataConsulta)}</Text>
+        <Text style={styles.data}>Horário: {item.dataConsulta.slice(11,16)}</Text>
+        <Text style={styles.nome}>Dentista: {item.dentistaNome}</Text>
       </View>
       <TouchableOpacity
         style={styles.botaoDetalhes}

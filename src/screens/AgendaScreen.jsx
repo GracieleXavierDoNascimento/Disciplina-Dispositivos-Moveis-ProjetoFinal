@@ -54,18 +54,21 @@ export default function AgendaScreen({ navigation }) {
       if (response.ok) {
         const data = await response.json();
 
-        // Mapear dados da API para a estrutura esperada
-        const consultasFormatadas = data.map(consulta => ({
-          id: consulta.id,
-          horaInicio: moment(consulta.dataConsulta).format('HH:mm'),
-          paciente: consulta.pacienteNome,
-          motivo: consulta.motivo,
-          procedimentosRealizados: consulta.procedimentosRealizados,
-          avaliacao: consulta.avaliacao,
-          recomendacoes: consulta.recomendacoes,
-          voltaEsperada: consulta.voltaEsperada,
-          statusConsulta: consulta.statusConsulta,
-        }));
+        // Mapear dados da API para a estrutura esperada e filtrar apenas consultas agendadas
+        const consultasFormatadas = data
+          .filter(consulta => consulta.statusConsulta === 1)
+          .map(consulta => ({
+            id: consulta.id,
+            horaConsulta: moment(consulta.dataConsulta).format('HH:mm'),
+            dataConsulta: consulta.dataConsulta,
+            paciente: consulta.pacienteNome,
+            motivo: consulta.motivoConsulta,
+            procedimentosRealizados: consulta.procedimentosRealizados,
+            avaliacao: consulta.avaliacao,
+            recomendacoes: consulta.recomendacoes,
+            voltaEsperada: consulta.voltaEsperada,
+            statusConsulta: consulta.statusConsulta,
+          }));
 
         setConsultas(consultasFormatadas);
       } else {
@@ -150,7 +153,7 @@ export default function AgendaScreen({ navigation }) {
           >
             <View style={styles.consulta}>
               <View style={styles.horario}>
-                <Text style={styles.horaTexto}>{item.horaInicio}</Text>
+                <Text style={styles.horaTexto}>{item.horaConsulta}</Text>
               </View>
               <View style={styles.detalhesConsulta}>
                 <View>

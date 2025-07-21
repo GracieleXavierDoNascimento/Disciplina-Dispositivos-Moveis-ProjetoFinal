@@ -1,5 +1,6 @@
 import { Feather } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   SafeAreaView,
@@ -76,6 +77,21 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
     recomendacoes: consulta.recomendacoes === null || consulta.recomendacoes === '',
     voltaEsperada: consulta.voltaEsperada === null || consulta.voltaEsperada === '',
   });
+  const [userRole, setUserRole] = useState('');
+
+  useEffect(() => {
+    async function getUserRole() {
+      try {
+        const role = await AsyncStorage.getItem('tipoUsuario');
+        if (role) {
+          setUserRole(role || '');
+        }
+      } catch (error) {
+        console.error('Erro ao obter role do usuário:', error);
+      }
+    }
+    getUserRole();
+  }, []);
 
   const toggleEditMode = (field) => {
     setEditMode(prev => ({
@@ -134,9 +150,13 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
 
       if (response.ok) {
         showSuccessNotification('Consulta cancelada com sucesso!');
-        navigation.goBack();
-      } else {
-        throw new Error('Erro ao deletar consulta');
+        if(userRole === 'ROLE_PACIENTE') {
+          navigation.navigate('ConsultasAgendadasPaciente');
+        } else if (userRole === 'ROLE_DENTISTA') {
+          navigation.navigate('Agenda');
+        } else {
+          throw new Error('Erro ao deletar consulta');
+        }
       }
     } catch (error) {
       console.error('Erro ao cancelar consulta:', error);
@@ -144,6 +164,12 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatarData = (dataString) => {
+    const data = dataString.slice(0, 10); // yyyy-MM-dd
+    const [ano, mes, dia] = data.split('-');
+    return `${dia}-${mes}-${ano}`;
   };
 
   return (
@@ -156,7 +182,7 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
       </TouchableOpacity>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        <Text style={styles.header}>Manutenção agenda</Text>
+        <Text style={styles.header}>Consulta</Text>
 
         <View style={styles.box}>
           <View style={styles.titleContainer}>
@@ -193,14 +219,16 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
               </Text>
             </View>
           </View>
-          <Text style={styles.label}>Paciente:</Text>
-          <Text style={styles.texto}>{consulta.paciente}</Text>
+          <Text style={styles.label}>
+            {userRole === 'ROLE_PACIENTE' 
+              ? `Dentista: ${consulta.dentistaNome}` 
+              : `Paciente: ${consulta.paciente}`}
+          </Text>
 
-          <Text style={styles.label}>Horário:</Text>
-          <Text style={styles.texto}>{consulta.horaInicio}</Text>
+          <Text style={styles.data}>Data: {formatarData(consulta.dataConsulta)}</Text>
+          <Text style={styles.data}>Horário: {consulta.dataConsulta.slice(11, 16)}</Text>
 
-          <Text style={styles.label}>Motivo da consulta:</Text>
-          <Text style={styles.texto}>{consulta.motivoConsulta || 'Não informado'}</Text>
+          <Text style={styles.label}>Motivo da consulta: {consulta.motivo || 'Não informado'}</Text>
 
           <View style={styles.botoes}>
             {consulta.statusConsulta === 1 ? (
@@ -217,7 +245,7 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
         {consulta.statusConsulta !== 3 ? (
 
           <View style={styles.box}>
-            <Text style={styles.titulo}>Anotações:</Text>
+            <Text style={styles.titulo}>Anotações do dentista:</Text>
 
             <EditableField
               label="Avaliação"
@@ -228,7 +256,7 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
               placeholder="Digite aqui..."
               editMode={editMode}
               toggleEditMode={toggleEditMode}
-              isFinalized={consulta.statusConsulta === 2}
+              isFinalized={consulta.statusConsulta === 2 || userRole === 'ROLE_PACIENTE'}
             />
 
             <EditableField
@@ -240,7 +268,7 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
               placeholder="Digite aqui..."
               editMode={editMode}
               toggleEditMode={toggleEditMode}
-              isFinalized={consulta.statusConsulta === 2}
+              isFinalized={consulta.statusConsulta === 2 || userRole === 'ROLE_PACIENTE'}
             />
 
             <EditableField
@@ -252,7 +280,7 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
               placeholder="Digite aqui..."
               editMode={editMode}
               toggleEditMode={toggleEditMode}
-              isFinalized={consulta.statusConsulta === 2}
+              isFinalized={consulta.statusConsulta === 2 || userRole === 'ROLE_PACIENTE'}
             />
 
             <EditableField
@@ -263,10 +291,10 @@ export default function ConsultaDetalhesScreen({ route, navigation }) {
               placeholder="Ex: 6 meses"
               editMode={editMode}
               toggleEditMode={toggleEditMode}
-              isFinalized={consulta.statusConsulta === 2}
+              isFinalized={consulta.statusConsulta === 2 || userRole === 'ROLE_PACIENTE'}
             />
 
-            {consulta.statusConsulta !== 2 && (
+            {consulta.statusConsulta !== 2 && userRole !== 'ROLE_PACIENTE' && (
               <TouchableOpacity
                 style={styles.botaoSalvar}
                 onPress={atualizarConsulta}
